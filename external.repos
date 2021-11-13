@@ -1,0 +1,10 @@
+repositories:
+    external/corrade:
+        type: git
+        url: https://github.com/mosra/corrade.git
+    external/magnum:
+        type: git
+        url: https://github.com/mosra/magnum.git
+    external/magnum-plugins:
+        type: git
+        url: https://github.com/mosra/magnum-plugins.git
