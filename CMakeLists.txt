@@ -1,4 +1,5 @@
-cmake_minimum_required(VERSION 3.16)
+# CMake 3.17 is required to find CUDAToolkit
+cmake_minimum_required(VERSION 3.17)
 
 # Enable C++20 in CUDA device code (supported only by clang)
 set(CMAKE_CXX_STANDARD 20)
