@@ -6,7 +6,10 @@ Building instructions assume Ubuntu 20.04 or compatible OS.
 
 ### Prerequisites
 
-- CUDA 11 (https://docs.nvidia.com/cuda/cuda-installation-guide-linux/index.html)
+- CUDA 11
+```
+https://docs.nvidia.com/cuda/cuda-installation-guide-linux/index.html
+```
 - CMake 3.18
 ```bash
 # WARNING: This will remove exisiting CMake installation and dependent packages. Proceed with caution!
@@ -19,7 +22,9 @@ sudo apt update
 sudo apt install cmake     
 ```
 
-- Clang 12, GLFW3, {FMT}
+- Clang 12
+- GLFW3
+- {FMT}
 ```bash
 sudo apt install clang-12 libglfw3-dev libfmt-dev
 ```
