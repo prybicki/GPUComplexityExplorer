@@ -1,4 +1,4 @@
-# CMake 3.17 is required to find CUDAToolkit
+# CMake 3.17 provides find_package(CUDAToolkit REQUIRED)
 cmake_minimum_required(VERSION 3.17)
 
 # Enable C++20 in CUDA device code (supported only by clang)
@@ -10,7 +10,7 @@ project(THC LANGUAGES CXX CUDA)
 
 # Configure and compile Magnum
 include(cmake/ConfigureMagnum.cmake)
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake/")
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake/magnum-bootstrap/modules")
 
 # Enable all warnings in Debug mode
 if (CMAKE_BUILD_TYPE EQUAL "Debug")
@@ -46,7 +46,7 @@ target_link_libraries(THC
 	MagnumPlugins::StbImageImporter
 	# Other dependencies
 	fmt::fmt
-	${CUDA_CUDART}
+	CUDA::cudart
 )
 
 if (${CMAKE_CUDA_COMPILER_ID} STREQUAL "Clang")

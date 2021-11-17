@@ -8,3 +8,7 @@ repositories:
     external/magnum-plugins:
         type: git
         url: https://github.com/mosra/magnum-plugins.git
+    cmake/magnum-bootstrap:
+        type: git
+        url: https://github.com/mosra/magnum-bootstrap.git
+        version: base-glfw
