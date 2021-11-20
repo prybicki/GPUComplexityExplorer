@@ -10,10 +10,10 @@ project(THC LANGUAGES CXX CUDA)
 
 # Configure and compile Magnum
 include(cmake/ConfigureMagnum.cmake)
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake/magnum-bootstrap/modules")
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/external/magnum-bootstrap/modules")
 
 # Enable all warnings in Debug mode
-if (CMAKE_BUILD_TYPE EQUAL "Debug")
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
 	set(CMAKE_CXX_FLAGS "-Wall -Wextra")
 	set(CMAKE_CUDA_FLAGS "-Wall -Wextra")
 endif()
@@ -21,15 +21,17 @@ endif()
 # Find dependencies
 find_package(FMT)
 find_package(CUDAToolkit REQUIRED)
-find_package(Magnum REQUIRED GL GlfwApplication Trade AnyImageImporter Shaders MeshTools Primitives)
+find_package(Magnum REQUIRED GL GlfwApplication Trade AnyImageImporter Shaders MeshTools Primitives DebugTools)
 
 # ---------------- Define project artifacts ---------------- #
 
-add_library(GPUKernels src/kernels.cu)
+add_library(GPUKernels src/cuda/kernels.cu)
 target_include_directories(GPUKernels PRIVATE include)
 
 add_executable(THC src/main.cpp)
 target_include_directories(THC PRIVATE include ${CUDAToolkit_INCLUDE_DIRS})
+get_target_property(THC_INCLUDE_DIRECTORIES THC INCLUDE_DIRECTORIES)
+message("Includes: ${THC_INCLUDE_DIRECTORIES}")
 
 target_link_libraries(THC
 	# Internal modules
@@ -43,6 +45,7 @@ target_link_libraries(THC
 	Magnum::MeshTools
 	Magnum::Shaders
 	Magnum::Primitives
+	Magnum::DebugTools
 	MagnumPlugins::StbImageImporter
 	# Other dependencies
 	fmt::fmt
