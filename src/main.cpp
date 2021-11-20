@@ -1,43 +1,96 @@
+#include <random>
+
 #include <fmt/format.h>
-#include <kernels.hpp>
-#include <lib.hpp>
 
-#include <Magnum/GL/DefaultFramebuffer.h>
-#include <Magnum/Platform/GlfwApplication.h>
+#include <Visualizer.hpp>
+#include <Vector.hpp>
+#include <cuda/kernels.hpp>
 
-using namespace Magnum;
+#include <Magnum/DebugTools/FrameProfiler.h>
 
-struct THCWindow : public Platform::Application
+std::default_random_engine engine;
+
+struct Particles
 {
-	explicit THCWindow(const Arguments& arguments)
-	: Platform::Application{arguments}
-	{
-		setWindowCentered();
-		setWindowTitle("Tiny Hadron Collider");
+	count_t count;
+	float* radius;
+	Vec2f* position;
+	Vec2f* velocity;
+	Vec4f* color;
 
+	std::vector<float> hRad;
+	std::vector<Vec2f> hPos, hVel;
+	std::vector<Vec4f> hCol;
+
+	Particles(count_t count, Vec2f posOrigin, float posRad, float radMin, float radMax, Vec4f col) : count(count)
+	{
+		std::uniform_real_distribution<float> dRad {radMin, radMax};
+		for (count_t i = 0; i < count; ++i) {
+
+			hPos.emplace_back(posOrigin + randomVectorInRing(0.0f, posRad));
+			hVel.emplace_back(randomVectorInRing(0.1f, 1.0f));
+			hCol.emplace_back(col);
+			hRad.emplace_back(dRad(engine));
+		}
+		CHECK_CUDA(cudaMalloc(&position, sizeof(Vec2f) * count));
+		CHECK_CUDA(cudaMalloc(&velocity, sizeof(Vec2f) * count));
+		CHECK_CUDA(cudaMalloc(&color, sizeof(Vec4f) * count));
+		CHECK_CUDA(cudaMalloc(&radius, sizeof(float) * count));
+
+		CHECK_CUDA(cudaMemcpy(position, hPos.data(), sizeof(Vec2f) * count, cudaMemcpyHostToDevice));
+		CHECK_CUDA(cudaMemcpy(velocity, hVel.data(), sizeof(Vec2f) * count, cudaMemcpyHostToDevice));
+		CHECK_CUDA(cudaMemcpy(color, hCol.data(), sizeof(Vec4f) * count, cudaMemcpyHostToDevice));
+		CHECK_CUDA(cudaMemcpy(radius, hRad.data(), sizeof(float) * count, cudaMemcpyHostToDevice));
 	}
 
 private:
-	void setWindowCentered()
+	Vec2f randomVectorInRing(float r, float R)
 	{
-		const GLFWvidmode* videoMode = glfwGetVideoMode(glfwGetPrimaryMonitor());
-		glfwSetWindowPos(window(), (videoMode->width - windowSize().x()) / 2, (videoMode->height - windowSize().y()) / 2);
-	}
+		std::uniform_real_distribution<float> dAngle {0, 2 * M_PI};
+		std::uniform_real_distribution<float> dLen {r, R};
 
-	void drawEvent() override
-	{
-		GL::defaultFramebuffer.clear(GL::FramebufferClear::Color);
-		swapBuffers();
+		float angle = dAngle(engine);
+		return dLen(engine) * Vec2f(sinf(angle), cosf(angle));
 	}
 };
 
+using namespace std::literals;
+
 int main(int argc, char** argv)
 {
-	runSync1D(64, 32, kHelloWorld, 42);
-	cudaFuncAttributes attrs;
-	CHECK_CUDA(cudaFuncGetAttributes(&attrs, reinterpret_cast<const void*>(kHelloWorld)));
-	fmt::print("BinaryVersion={} PtxVersion={}\n", attrs.binaryVersion, attrs.ptxVersion);
+	constexpr count_t count = 131072 * 6;
+	Visualizer vis({argc, argv});
 
-	THCWindow app({argc, argv});
-	return app.exec();
+	Vec4f r = {1.0f, 0.0f, 0.0f, 0.8f};
+	Vec4f g = {0.0f, 1.0f, 0.0f, 0.8f};
+	Vec4f b = {0.0f, 0.0f, 1.0f, 0.8f};
+
+	// Fill background to avoid the ugly.
+	vis.redraw();
+	vis.mainLoopIteration();
+
+	Particles left =  { count, {-0.7f, -0.3f}, 0.1f, 0.001, 0.002, r};
+	Particles top =   { count, {+0.0f, +0.7f}, 0.1f, 0.001, 0.002, g};
+	Particles right = { count, {+0.7f, -0.3f}, 0.1f, 0.001, 0.002, b};
+
+	DebugTools::FrameProfilerGL profiler { DebugTools::FrameProfilerGL::Value::FrameTime, 10};
+	bool shouldContinue;
+	do {
+		profiler.beginFrame();
+		cm.runSync1D(count, 256, kApplyVelocity, count, 0.005f, top.velocity, top.position);
+		cm.runSync1D(count, 256, kApplyVelocity, count, 0.005f, left.velocity, left.position);
+		cm.runSync1D(count, 256, kApplyVelocity, count, 0.005f, right.velocity, right.position);
+		vis.renderParticles(count, top.position, top.radius, top.color);
+		vis.renderParticles(count, left.position, left.radius, left.color);
+		vis.renderParticles(count, right.position, right.radius, right.color);
+		vis.redraw();
+		shouldContinue = vis.mainLoopIteration();
+		profiler.endFrame();
+
+		if (profiler.isMeasurementAvailable(DebugTools::FrameProfilerGL::Value::FrameTime)) {
+			fmt::print("FPS={:4.2f}\n", 1e9 / profiler.frameTimeMean());
+		}
+	}
+	while (shouldContinue);
+	return 0;
 }
