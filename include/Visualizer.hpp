@@ -133,25 +133,4 @@ private:
 		GLConfiguration cfg;
 		return cfg;
 	}
-
-	// Trade::ImageData2D loadImage(const std::string& path)
-	// {
-	// 	PluginManager::Manager<Trade::AbstractImporter> pluginManager;
-	// 	Trade::AnyImageImporter imageImporter {pluginManager};
-	//
-	// 	imageImporter.openFile(path);
-	//
-	// 	auto maybeImage = imageImporter.image2D(0);
-	// 	if (!maybeImage) {
-	// 		fmt::print(stderr, "Cannot load image\n");
-	// 		std::exit(1);
-	// 	}
-	//
-	// 	Trade::ImageData2D image = std::move(*maybeImage);
-	// 	auto count = image.size().x() * image.size().y();
-	// 	auto pixelFormatStr = Utility::ConfigurationValue<PixelFormat>::toString(image.format(), Utility::ConfigurationValueFlags());
-	// 	fmt::print("PixelFormat={}, PixelSize={}, ImageSize=({}, {})\n", pixelFormatStr, pixelSize(image.format()), image.size().x(), image.size().y());
-	//
-	// 	return image;
-	// }
 };
