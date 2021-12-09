@@ -1,8 +1,9 @@
 #pragma once
 
 #include <cassert>
-#include <queue>
 #include <functional>
+#include <set>
+#include <queue>
 
 #include <MagnumPlugins/AnyImageImporter/AnyImageImporter.h>
 #include <Magnum/GL/DefaultFramebuffer.h>
@@ -11,13 +12,18 @@
 #include <Magnum/Math/Angle.h>
 #include <Magnum/Math/Color.h>
 #include <Magnum/Math/Matrix3.h>
+#include <Magnum/Math/Matrix4.h>
 #include <Magnum/MeshTools/Compile.h>
 #include <Magnum/PixelFormat.h>
 #include <Magnum/Platform/GlfwApplication.h>
 #include <Magnum/Primitives/Circle.h>
+#include <Magnum/SceneGraph/Object.h>
+#include <Magnum/SceneGraph/Camera.h>
+#include <Magnum/SceneGraph/MatrixTransformation2D.hpp>
 #include <Magnum/Shaders/FlatGL.h>
 #include <Magnum/Trade/ImageData.h>
 #include <Magnum/Trade/MeshData.h>
+
 
 #include <cuda_runtime_api.h>
 #include <cuda_gl_interop.h>
@@ -29,6 +35,7 @@
 #include <Matrix.hpp>
 #include <ComputeManager.hpp>
 
+
 using namespace Magnum;
 
 struct Visualizer : public Platform::Application
@@ -38,6 +45,10 @@ private:
 	Shaders::FlatGL2D shader;
 	std::queue<std::function<void()>> drawQueue;
 
+	std::set<KeyEvent::Key> pressedKeys;
+	SceneGraph::Object<SceneGraph::MatrixTransformation2D> cameraObject;
+	SceneGraph::Camera2D camera;
+
 	GL::Buffer colorBuffer;
 	GL::Buffer transformBuffer;
 	cudaGraphicsResource_t colorResource;
@@ -46,8 +57,9 @@ private:
 public:
 	explicit Visualizer(const Arguments& arguments)
 	: Platform::Application{arguments, makeWindowConfig(), makeOpenGLConfig()}
-	, circle(MeshTools::compile(Primitives::circle2DSolid(8)))
+	, circle(MeshTools::compile(Primitives::circle2DSolid(6)))
 	, shader(Shaders::FlatGL2D::Flag::InstancedTransformation | Shaders::FlatGL2D::Flag::VertexColor)
+	, camera(cameraObject)
 	, colorBuffer()
 	, transformBuffer()
 	, colorResource(nullptr)
@@ -104,14 +116,45 @@ public:
 			circle.addVertexBufferInstanced(transformBuffer, 1, 0,Shaders::FlatGL2D::TransformationMatrix {});
 			circle.addVertexBufferInstanced(colorBuffer, 1, 0,Shaders::FlatGL2D::Color4 {});
 			circle.setInstanceCount(count);
+
+			shader.setTransformationProjectionMatrix(camera.projectionMatrix() * camera.cameraMatrix());
 			shader.draw(circle);
 		};
 		drawQueue.push(drawLambda);
 	}
 
 private:
+	void keyPressEvent(KeyEvent& key) override { pressedKeys.insert(key.key()); }
+	void keyReleaseEvent(KeyEvent& key) override { pressedKeys.erase(key.key()); }
+
+	void handleKeyboard()
+	{
+		static float cameraPanSpeed = 0.01;
+		static float cameraZoomSpeed = 0.04f;
+		auto projectionSize = camera.projectionSize();
+		if (pressedKeys.contains(KeyEvent::Key::A)) {
+			cameraObject.translate({-cameraPanSpeed * projectionSize.x(), 0});
+		}
+		if (pressedKeys.contains(KeyEvent::Key::D)) {
+			cameraObject.translate({+cameraPanSpeed * projectionSize.x(), 0});
+		}
+		if (pressedKeys.contains(KeyEvent::Key::W)) {
+			cameraObject.translate({0, +cameraPanSpeed * projectionSize.y()});
+		}
+		if (pressedKeys.contains(KeyEvent::Key::S)) {
+			cameraObject.translate({0, -cameraPanSpeed * projectionSize.y()});
+		}
+		if (pressedKeys.contains(KeyEvent::Key::Q)) {
+			camera.setProjectionMatrix(Matrix3::projection(projectionSize * (1+cameraZoomSpeed)));
+		}
+		if (pressedKeys.contains(KeyEvent::Key::E)) {
+			camera.setProjectionMatrix(Matrix3::projection(projectionSize * (1-cameraZoomSpeed)));
+		}
+	}
+
 	void drawEvent() override
 	{
+		handleKeyboard();
 		GL::defaultFramebuffer.clear(GL::FramebufferClear::Color);
 		while (!drawQueue.empty()) {
 			std::invoke(drawQueue.front());
