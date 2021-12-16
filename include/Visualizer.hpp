@@ -34,13 +34,21 @@
 #include <Vector.hpp>
 #include <Matrix.hpp>
 #include <ComputeManager.hpp>
+#include <Corrade/Utility/Arguments.h>
 
 
 using namespace Magnum;
 
 struct Visualizer : public Platform::Application
 {
+	// TODO: Add documentation (units!)
+	constexpr static float INITIAL_RENDER_DISTANCE = 3.0f;
+	constexpr static Vector2 INITAL_CAMERA_POSITION = {1.0f, 1.0f};
+	constexpr static float CAMERA_PAN_SPEED = 0.016f;
+	constexpr static float CAMERA_ZOOM_SPEED = 0.032f;
+
 private:
+	Utility::Arguments cliArgs;
 	GL::Mesh circle;
 	Shaders::FlatGL2D shader;
 	std::queue<std::function<void()>> drawQueue;
@@ -48,6 +56,7 @@ private:
 	std::set<KeyEvent::Key> pressedKeys;
 	SceneGraph::Object<SceneGraph::MatrixTransformation2D> cameraObject;
 	SceneGraph::Camera2D camera;
+	float currentZoom = 1.0f;
 
 	GL::Buffer colorBuffer;
 	GL::Buffer transformBuffer;
@@ -55,8 +64,10 @@ private:
 	cudaGraphicsResource_t transformResource;
 
 public:
-	explicit Visualizer(const Arguments& arguments)
-	: Platform::Application{arguments, makeWindowConfig(), makeOpenGLConfig()}
+	Visualizer(int argc, char** argv) : Visualizer({argc, argv}, makeCLIArgs({argc, argv})) {}
+
+	Visualizer(const Arguments& args, const Utility::Arguments& cliArgs)
+	: Platform::Application{args, makeWindowConfig(cliArgs), makeOpenGLConfig()}
 	, circle(MeshTools::compile(Primitives::circle2DSolid(6)))
 	, shader(Shaders::FlatGL2D::Flag::InstancedTransformation | Shaders::FlatGL2D::Flag::VertexColor)
 	, camera(cameraObject)
@@ -68,10 +79,23 @@ public:
 		const GLFWvidmode* videoMode = glfwGetVideoMode(glfwGetPrimaryMonitor());
 		glfwSetWindowPos(window(), (videoMode->width - windowSize().x()) / 2, (videoMode->height - windowSize().y()) / 2);
 
-		GL::Renderer::enable(GL::Renderer::Feature::Blending);
-		GL::Renderer::setBlendFunction(
-				GL::Renderer::BlendFunction::SourceAlpha, /* or SourceAlpha for non-premultiplied */
-				GL::Renderer::BlendFunction::DestinationAlpha);
+		// GL::Renderer::enable(GL::Renderer::Feature::Blending);
+		// GL::Renderer::setBlendFunction(
+		// 		GL::Renderer::BlendFunction::SourceAlpha,
+		// 		GL::Renderer::BlendFunction::DestinationAlpha);
+		currentZoom = INITIAL_RENDER_DISTANCE / std::min(windowSize().x(), windowSize().y());
+		cameraObject.translate(INITAL_CAMERA_POSITION);
+	}
+
+	static Utility::Arguments makeCLIArgs(const Arguments& args)
+	{
+		Utility::Arguments cliArgs;
+		// TODO: add options:
+		// - Sample count
+		// - Particle segment count
+		cliArgs.addBooleanOption('f', "fullscreen");
+		cliArgs.parse(args.argc, args.argv);
+		return cliArgs;
 	}
 
 	~Visualizer()
@@ -124,33 +148,50 @@ public:
 	}
 
 private:
+	void viewportEvent(ViewportEvent& event) override
+	{
+		// fmt::print("windowSize=({}, {}) framebufferSize=({}, {}) dpiScale=({}, {})\n",
+		// 	event.windowSize().x(), event.windowSize().y(),
+		// 	event.framebufferSize().x(), event.framebufferSize().y(),
+		// 	event.dpiScaling().x(), event.dpiScaling().y());
+		GL::defaultFramebuffer.setViewport({{}, event.framebufferSize()});
+		updateProjectionMatrix();
+	}
+
 	void keyPressEvent(KeyEvent& key) override { pressedKeys.insert(key.key()); }
 	void keyReleaseEvent(KeyEvent& key) override { pressedKeys.erase(key.key()); }
-
 	void handleKeyboard()
 	{
-		static float cameraPanSpeed = 0.01;
-		static float cameraZoomSpeed = 0.04f;
-		auto projectionSize = camera.projectionSize();
+		float cameraPanSpeed = CAMERA_PAN_SPEED * std::min(camera.projectionSize().x(), camera.projectionSize().y());
 		if (pressedKeys.contains(KeyEvent::Key::A)) {
-			cameraObject.translate({-cameraPanSpeed * projectionSize.x(), 0});
+			cameraObject.translate({-cameraPanSpeed, 0});
 		}
 		if (pressedKeys.contains(KeyEvent::Key::D)) {
-			cameraObject.translate({+cameraPanSpeed * projectionSize.x(), 0});
+			cameraObject.translate({+cameraPanSpeed, 0});
 		}
 		if (pressedKeys.contains(KeyEvent::Key::W)) {
-			cameraObject.translate({0, +cameraPanSpeed * projectionSize.y()});
+			cameraObject.translate({0, +cameraPanSpeed});
 		}
 		if (pressedKeys.contains(KeyEvent::Key::S)) {
-			cameraObject.translate({0, -cameraPanSpeed * projectionSize.y()});
+			cameraObject.translate({0, -cameraPanSpeed});
 		}
 		if (pressedKeys.contains(KeyEvent::Key::Q)) {
-			camera.setProjectionMatrix(Matrix3::projection(projectionSize * (1+cameraZoomSpeed)));
+			currentZoom *= (1+CAMERA_ZOOM_SPEED);
 		}
 		if (pressedKeys.contains(KeyEvent::Key::E)) {
-			camera.setProjectionMatrix(Matrix3::projection(projectionSize * (1-cameraZoomSpeed)));
+			currentZoom *= (1-CAMERA_ZOOM_SPEED);
 		}
-	}
+		if (pressedKeys.contains(KeyEvent::Key::Esc)) {
+			this->exit(0);
+		}
+		updateProjectionMatrix();
+	};
+
+	 void updateProjectionMatrix()
+	 {
+		auto projectionMatrix = Matrix3::projection(Vector2(windowSize()) * currentZoom);
+		camera.setProjectionMatrix(projectionMatrix);
+	 }
 
 	void drawEvent() override
 	{
@@ -163,11 +204,24 @@ private:
 		swapBuffers();
 	}
 
-	Configuration makeWindowConfig()
+	Configuration makeWindowConfig(const Utility::Arguments& cliArgs)
 	{
 		Configuration cfg;
-		cfg.setSize({1024, 1024});
+		GlfwApplication::Configuration::WindowFlags flags;
 		cfg.setTitle("Tiny Hadron Collider");
+
+		glfwInit(); // TODO: Temporary hack: need to find a way to query desktop resolution before glfwInitialization
+		const GLFWvidmode* videoMode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+		if (cliArgs.isSet("fullscreen")) {
+			flags |= Platform::GlfwApplication::Configuration::WindowFlag::Fullscreen;
+			cfg.setSize({videoMode->width, videoMode->height});
+		}
+		else {
+			flags |= GlfwApplication::Configuration::WindowFlag::Resizable;
+			// TODO: this is flawed approach when dpiScaling != 1.0, fix it
+			cfg.setSize({3 * videoMode->width/4, 3 * videoMode->height/4});
+		}
+		cfg.setWindowFlags(flags);
 		return cfg;
 	}
 
