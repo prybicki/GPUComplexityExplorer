@@ -50,6 +50,7 @@ target_link_libraries(THC
 	# Other dependencies
 	fmt::fmt
 	CUDA::cudart
+	ImPlot
 )
 
 if (${CMAKE_CUDA_COMPILER_ID} STREQUAL "Clang")
