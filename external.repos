@@ -12,3 +12,10 @@ repositories:
         type: git
         url: https://github.com/mosra/magnum-bootstrap.git
         version: base-glfw
+    external/magnum-integration:
+        type: git
+        url: https://github.com/pezcode/magnum-integration.git
+        version: imgui-keymap
+    external/imgui:
+        type: git
+        url: https://github.com/ocornut/imgui.git
