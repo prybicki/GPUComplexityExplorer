@@ -6,6 +6,7 @@
 #include <queue>
 
 #include <MagnumPlugins/AnyImageImporter/AnyImageImporter.h>
+#include <Magnum/DebugTools/FrameProfiler.h>
 #include <Magnum/GL/DefaultFramebuffer.h>
 #include <Magnum/GL/Mesh.h>
 #include <Magnum/GL/Renderer.h>
@@ -23,6 +24,7 @@
 #include <Magnum/Shaders/FlatGL.h>
 #include <Magnum/Trade/ImageData.h>
 #include <Magnum/Trade/MeshData.h>
+#include <Magnum/ImGuiIntegration/Context.hpp>
 
 
 #include <cuda_runtime_api.h>
@@ -63,6 +65,10 @@ private:
 	cudaGraphicsResource_t colorResource;
 	cudaGraphicsResource_t transformResource;
 
+	std::optional<std::function<void()>> userGUI;
+	ImGuiIntegration::Context _imgui{NoCreate};
+	DebugTools::FrameProfilerGL profiler { DebugTools::FrameProfilerGL::Value::FrameTime, 10};
+
 public:
 	Visualizer(int argc, char** argv) : Visualizer({argc, argv}, makeCLIArgs({argc, argv})) {}
 
@@ -79,12 +85,24 @@ public:
 		const GLFWvidmode* videoMode = glfwGetVideoMode(glfwGetPrimaryMonitor());
 		glfwSetWindowPos(window(), (videoMode->width - windowSize().x()) / 2, (videoMode->height - windowSize().y()) / 2);
 
-		// GL::Renderer::enable(GL::Renderer::Feature::Blending);
 		// GL::Renderer::setBlendFunction(
 		// 		GL::Renderer::BlendFunction::SourceAlpha,
 		// 		GL::Renderer::BlendFunction::DestinationAlpha);
 		currentZoom = INITIAL_RENDER_DISTANCE / std::min(windowSize().x(), windowSize().y());
 		cameraObject.translate(INITAL_CAMERA_POSITION);
+
+		// Critical for GUI!
+		GL::Renderer::enable(GL::Renderer::Feature::Blending);
+		_imgui = ImGuiIntegration::Context(Vector2{windowSize()} / dpiScaling(), windowSize(), framebufferSize());
+		GL::Renderer::setBlendEquation(GL::Renderer::BlendEquation::Add,GL::Renderer::BlendEquation::Add);
+		GL::Renderer::setBlendFunction(GL::Renderer::BlendFunction::SourceAlpha, GL::Renderer::BlendFunction::OneMinusSourceAlpha);
+
+		profiler.beginFrame();
+	}
+
+	void setUserGUI(std::function<void()> userGUI)
+	{
+		this->userGUI = userGUI;
 	}
 
 	static Utility::Arguments makeCLIArgs(const Arguments& args)
@@ -148,6 +166,7 @@ public:
 	}
 
 private:
+
 	void viewportEvent(ViewportEvent& event) override
 	{
 		// fmt::print("windowSize=({}, {}) framebufferSize=({}, {}) dpiScale=({}, {})\n",
@@ -156,10 +175,45 @@ private:
 		// 	event.dpiScaling().x(), event.dpiScaling().y());
 		GL::defaultFramebuffer.setViewport({{}, event.framebufferSize()});
 		updateProjectionMatrix();
+
+		_imgui.relayout(Vector2{event.windowSize()} / event.dpiScaling(), event.windowSize(), event.framebufferSize());
 	}
 
-	void keyPressEvent(KeyEvent& key) override { pressedKeys.insert(key.key()); }
-	void keyReleaseEvent(KeyEvent& key) override { pressedKeys.erase(key.key()); }
+	void keyPressEvent(KeyEvent& event) override
+	{
+		if(_imgui.handleKeyPressEvent(event)) {
+			return;
+		}
+		pressedKeys.insert(event.key());
+	}
+
+	void keyReleaseEvent(KeyEvent& event) override
+	{
+		if(_imgui.handleKeyReleaseEvent(event)) {
+			return;
+		}
+		pressedKeys.erase(event.key());
+	}
+
+	void mousePressEvent(MouseEvent& event) override {
+		if(_imgui.handleMousePressEvent(event)) return;
+	}
+
+	void mouseReleaseEvent(MouseEvent& event) override {
+		if(_imgui.handleMouseReleaseEvent(event)) return;
+	}
+
+	void mouseMoveEvent(MouseMoveEvent& event) override {
+		if(_imgui.handleMouseMoveEvent(event)) return;
+	}
+
+	void mouseScrollEvent(MouseScrollEvent& event) override {
+		if(_imgui.handleMouseScrollEvent(event)) {
+			/* Prevent scrolling the page */
+			event.setAccepted();
+			return;
+		}
+	}
 	void handleKeyboard()
 	{
 		float cameraPanSpeed = CAMERA_PAN_SPEED * std::min(camera.projectionSize().x(), camera.projectionSize().y());
@@ -201,7 +255,35 @@ private:
 			std::invoke(drawQueue.front());
 			drawQueue.pop();
 		}
+
+		drawGUI();
 		swapBuffers();
+	}
+
+	void drawGUI()
+	{
+	 	static double FPS = 0.0;
+	 	profiler.endFrame();
+	 	if (profiler.isMeasurementAvailable(DebugTools::FrameProfilerGL::Value::FrameTime)) {
+	 		FPS = 1e9 / profiler.frameTimeMean();
+	 	}
+	 	profiler.beginFrame();
+
+		_imgui.newFrame();
+		if(ImGui::GetIO().WantTextInput && !isTextInputActive())
+			startTextInput();
+		else if(!ImGui::GetIO().WantTextInput && isTextInputActive())
+			stopTextInput();
+
+		ImGui::Begin("Stats");
+		ImGui::Text("FPS: %.1f", FPS);
+		ImGui::End();
+
+	 	if (userGUI.has_value()) {
+	 		std::invoke(this->userGUI.value());
+	 	}
+
+	 	_imgui.drawFrame();
 	}
 
 	Configuration makeWindowConfig(const Utility::Arguments& cliArgs)
