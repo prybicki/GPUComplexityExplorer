@@ -84,11 +84,29 @@ int main(int argc, char** argv)
 			particleGroups.push_back(pg);
 		}
 	}
-
 	float dt = 0.0001f;
+	float time = 0.0f;
+	std::deque<float> times;
+	std::deque<float> sins;
 	vis.setUserGUI([&](){
+		times.push_back(time);
+		sins.push_back(std::sin(100*time));
+
+		if (times.size() > 100) {
+			times.pop_front();
+			sins.pop_front();
+		}
+
 		ImGui::Begin("Controls", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
-		ImGui::SliderFloat( "DT", &dt, 0, 0.01, "%.4g", ImGuiSliderFlags_Logarithmic | ImGuiSliderFlags_NoRoundToFormat);
+		ImGui::SliderFloat( "Delta Time", &dt, 0, 0.01, "%.4g", ImGuiSliderFlags_Logarithmic | ImGuiSliderFlags_NoRoundToFormat);
+		if (ImPlot::BeginPlot("Plotretto")) {
+			auto xs = std::vector(times.begin(), times.end());
+			auto ys = std::vector(sins.begin(), sins.end());
+			ImPlot::SetupAxes("X", "Y", ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit);
+			ImPlot::PlotLine("sin(t)", xs.data(), ys.data(), xs.size());
+
+			ImPlot::EndPlot();
+		}
 		ImGui::End();
 	});
 
@@ -100,6 +118,7 @@ int main(int argc, char** argv)
 		}
 		vis.redraw();
 		shouldContinue = vis.mainLoopIteration();
+		time += dt;
 	}
 	while (shouldContinue);
 	return 0;
