@@ -26,6 +26,7 @@
 #include <Magnum/Trade/MeshData.h>
 #include <Magnum/ImGuiIntegration/Context.hpp>
 
+#include <implot.h>
 
 #include <cuda_runtime_api.h>
 #include <cuda_gl_interop.h>
@@ -67,6 +68,7 @@ private:
 
 	std::optional<std::function<void()>> userGUI;
 	ImGuiIntegration::Context _imgui{NoCreate};
+	ImPlotContext* implotCtx;
 	DebugTools::FrameProfilerGL profiler { DebugTools::FrameProfilerGL::Value::FrameTime, 10};
 
 public:
@@ -91,9 +93,11 @@ public:
 		currentZoom = INITIAL_RENDER_DISTANCE / std::min(windowSize().x(), windowSize().y());
 		cameraObject.translate(INITAL_CAMERA_POSITION);
 
+		_imgui = ImGuiIntegration::Context(Vector2{windowSize()} / dpiScaling(), windowSize(), framebufferSize());
+		implotCtx = ImPlot::CreateContext();
+
 		// Critical for GUI!
 		GL::Renderer::enable(GL::Renderer::Feature::Blending);
-		_imgui = ImGuiIntegration::Context(Vector2{windowSize()} / dpiScaling(), windowSize(), framebufferSize());
 		GL::Renderer::setBlendEquation(GL::Renderer::BlendEquation::Add,GL::Renderer::BlendEquation::Add);
 		GL::Renderer::setBlendFunction(GL::Renderer::BlendFunction::SourceAlpha, GL::Renderer::BlendFunction::OneMinusSourceAlpha);
 
@@ -118,6 +122,7 @@ public:
 
 	~Visualizer()
 	{
+		ImPlot::DestroyContext(implotCtx);
 		if (transformResource != nullptr) {
 			CHECK_CUDA_NO_THROW(cudaGraphicsUnregisterResource(colorResource));
 			CHECK_CUDA_NO_THROW(cudaGraphicsUnregisterResource(transformResource));
@@ -283,7 +288,18 @@ private:
 	 		std::invoke(this->userGUI.value());
 	 	}
 
+	 	// GL::Renderer::enable(GL::Renderer::Feature::Blending);
+	 	GL::Renderer::enable(GL::Renderer::Feature::ScissorTest);
+	 	// GL::Renderer::disable(GL::Renderer::Feature::FaceCulling);
+	 	// GL::Renderer::disable(GL::Renderer::Feature::DepthTest);
+
 	 	_imgui.drawFrame();
+
+	 	// GL::Renderer::enable(GL::Renderer::Feature::DepthTest);
+	 	// GL::Renderer::enable(GL::Renderer::Feature::FaceCulling);
+	 	GL::Renderer::disable(GL::Renderer::Feature::ScissorTest);
+	 	// GL::Renderer::disable(GL::Renderer::Feature::Blending);
+
 	}
 
 	Configuration makeWindowConfig(const Utility::Arguments& cliArgs)
