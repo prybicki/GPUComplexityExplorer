@@ -10,7 +10,6 @@ project(THC LANGUAGES CXX CUDA)
 
 # Configure and compile Magnum
 include(cmake/ConfigureMagnum.cmake)
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/external/magnum-bootstrap/modules")
 
 # Enable all warnings in Debug mode
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
@@ -22,6 +21,7 @@ endif()
 find_package(FMT)
 find_package(CUDAToolkit REQUIRED)
 find_package(Magnum REQUIRED GL GlfwApplication Trade AnyImageImporter Shaders MeshTools Primitives DebugTools)
+find_package(MagnumIntegration REQUIRED ImGui)
 
 # ---------------- Define project artifacts ---------------- #
 
@@ -41,11 +41,11 @@ target_link_libraries(THC
 	Magnum::GL
 	Magnum::Magnum
 	Magnum::Trade
-	Magnum::AnyImageImporter
 	Magnum::MeshTools
 	Magnum::Shaders
 	Magnum::Primitives
 	Magnum::DebugTools
+	MagnumIntegration::ImGui
 	MagnumPlugins::StbImageImporter
 	# Other dependencies
 	fmt::fmt
