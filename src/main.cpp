@@ -6,8 +6,6 @@
 #include <Vector.hpp>
 #include <cuda/kernels.hpp>
 
-#include <Magnum/DebugTools/FrameProfiler.h>
-
 std::default_random_engine engine;
 
 struct Particles
@@ -87,21 +85,21 @@ int main(int argc, char** argv)
 		}
 	}
 
-	DebugTools::FrameProfilerGL profiler { DebugTools::FrameProfilerGL::Value::FrameTime, 10};
+	float dt = 0.0001f;
+	vis.setUserGUI([&](){
+		ImGui::Begin("Controls", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
+		ImGui::SliderFloat( "DT", &dt, 0, 0.01, "%.4g", ImGuiSliderFlags_Logarithmic | ImGuiSliderFlags_NoRoundToFormat);
+		ImGui::End();
+	});
+
 	bool shouldContinue;
 	do {
-		profiler.beginFrame();
 		for (auto&& pg : particleGroups){
-			cm.runSync1D(count, 256, kApplyVelocity, count, 0.0001f, pg.velocity, pg.position);
+			cm.runSync1D(count, 256, kApplyVelocity, count, dt, pg.velocity, pg.position);
 			vis.renderParticles(count, pg.position, pg.radius, pg.color);
 		}
 		vis.redraw();
 		shouldContinue = vis.mainLoopIteration();
-		profiler.endFrame();
-
-		if (profiler.isMeasurementAvailable(DebugTools::FrameProfilerGL::Value::FrameTime)) {
-			fmt::print("FPS={:4.2f}\n", 1e9 / profiler.frameTimeMean());
-		}
 	}
 	while (shouldContinue);
 	return 0;
