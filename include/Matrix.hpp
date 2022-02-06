@@ -3,10 +3,10 @@
 #include <Vector.hpp>
 #include <array>
 
-#ifndef __CUDACC__
-#define __host__
-#define __device__
-#endif // __CUDACC__
+// #ifndef __CUDACC__
+// #define __host__
+// #define __device__
+// #endif // __CUDACC__
 
 template<count_t columnCount, count_t rowCount, typename T>
 class Matrix

@@ -25,13 +25,14 @@ find_package(MagnumIntegration REQUIRED ImGui)
 
 # ---------------- Define project artifacts ---------------- #
 
+# Add resources compiled into the binary (e.g. shaders)
+corrade_add_resource(ShaderSources include/internal/shaders/shaders.conf)
+
 add_library(GPUKernels src/cuda/kernels.cu)
 target_include_directories(GPUKernels PRIVATE include)
 
-add_executable(THC src/main.cpp)
+add_executable(THC src/gol.cpp ${ShaderSources})
 target_include_directories(THC PRIVATE include ${CUDAToolkit_INCLUDE_DIRS})
-get_target_property(THC_INCLUDE_DIRECTORIES THC INCLUDE_DIRECTORIES)
-message("Includes: ${THC_INCLUDE_DIRECTORIES}")
 
 target_link_libraries(THC
 	# Internal modules
@@ -50,6 +51,7 @@ target_link_libraries(THC
 	# Other dependencies
 	fmt::fmt
 	CUDA::cudart
+	CUDA::curand
 	ImPlot
 )
 

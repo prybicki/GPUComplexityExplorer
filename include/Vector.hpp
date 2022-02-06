@@ -4,12 +4,14 @@
 #include <numeric>
 #include <array>
 
+#include <fmt/format.h>
+
 #include <internal/aliases.hpp>
 
-#ifndef __CUDACC__
-#define __host__
-#define __device__
-#endif // __CUDACC__
+// #ifndef __CUDACC__
+// #define __host__
+// #define __device__
+// #endif // __CUDACC__
 
 template<count_t dim, typename T>
 class Vector

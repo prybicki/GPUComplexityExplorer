@@ -10,6 +10,7 @@
 #include <Magnum/GL/DefaultFramebuffer.h>
 #include <Magnum/GL/Mesh.h>
 #include <Magnum/GL/Renderer.h>
+#include <Magnum/GL/TextureFormat.h>
 #include <Magnum/Math/Angle.h>
 #include <Magnum/Math/Color.h>
 #include <Magnum/Math/Matrix3.h>
@@ -26,6 +27,7 @@
 #include <Magnum/Trade/MeshData.h>
 #include <Magnum/ImGuiIntegration/Context.hpp>
 
+
 #include <implot.h>
 
 #include <cuda_runtime_api.h>
@@ -38,6 +40,8 @@
 #include <Matrix.hpp>
 #include <ComputeManager.hpp>
 #include <Corrade/Utility/Arguments.h>
+#include <Magnum/GL/RectangleTexture.h>
+#include <Field2DShader.hpp>
 
 
 using namespace Magnum;
@@ -45,15 +49,16 @@ using namespace Magnum;
 struct Visualizer : public Platform::Application
 {
 	// TODO: Add documentation (units!)
-	constexpr static float INITIAL_RENDER_DISTANCE = 3.0f;
-	constexpr static Vector2 INITAL_CAMERA_POSITION = {1.0f, 1.0f};
+	constexpr static float INITIAL_RENDER_DISTANCE = 16.0f;
+	constexpr static Vector2 INITAL_CAMERA_POSITION = {2048.f, 2048.f};
 	constexpr static float CAMERA_PAN_SPEED = 0.016f;
 	constexpr static float CAMERA_ZOOM_SPEED = 0.032f;
 
 private:
 	Utility::Arguments cliArgs;
 	GL::Mesh circle;
-	Shaders::FlatGL2D shader;
+	Shaders::FlatGL2D flatShader;
+	Field2DShader field2DShader;
 	std::queue<std::function<void()>> drawQueue;
 
 	std::set<KeyEvent::Key> pressedKeys;
@@ -77,7 +82,8 @@ public:
 	Visualizer(const Arguments& args, const Utility::Arguments& cliArgs)
 	: Platform::Application{args, makeWindowConfig(cliArgs), makeOpenGLConfig()}
 	, circle(MeshTools::compile(Primitives::circle2DSolid(6)))
-	, shader(Shaders::FlatGL2D::Flag::InstancedTransformation | Shaders::FlatGL2D::Flag::VertexColor)
+	, flatShader(Shaders::FlatGL2D::Flag::InstancedTransformation | Shaders::FlatGL2D::Flag::VertexColor)
+	, field2DShader()
 	, camera(cameraObject)
 	, colorBuffer()
 	, transformBuffer()
@@ -116,6 +122,7 @@ public:
 		// - Sample count
 		// - Particle segment count
 		cliArgs.addBooleanOption('f', "fullscreen");
+		cliArgs.addSkippedPrefix("magnum", "Magnum options");
 		cliArgs.parse(args.argc, args.argv);
 		return cliArgs;
 	}
@@ -164,12 +171,38 @@ public:
 			circle.addVertexBufferInstanced(colorBuffer, 1, 0,Shaders::FlatGL2D::Color4 {});
 			circle.setInstanceCount(count);
 
-			shader.setTransformationProjectionMatrix(camera.projectionMatrix() * camera.cameraMatrix());
-			shader.draw(circle);
+			flatShader.setTransformationProjectionMatrix(camera.projectionMatrix() * camera.cameraMatrix());
+			flatShader.draw(circle);
 		};
 		drawQueue.push(drawLambda);
 	}
 
+	// devBytes should be 1 byte per pixel
+	void renderTexture(float posX, float posY, int sizeX, int sizeY, void* devBytes)
+	{
+		std::function drawLambda = [=](){
+			GL::RectangleTexture texture;
+			cudaGraphicsResource_t resource;
+			cudaArray_t array;
+
+			texture.setStorage(GL::TextureFormat::R8, {sizeX, sizeY});
+			texture.setMinificationFilter(GL::SamplerFilter::Nearest);
+			texture.setMagnificationFilter(GL::SamplerFilter::Nearest);
+			CHECK_CUDA(cudaGraphicsGLRegisterImage(&resource,
+			                                       texture.id(),
+			                                       GL_TEXTURE_RECTANGLE,
+			                                       cudaGraphicsRegisterFlagsWriteDiscard));
+			CHECK_CUDA(cudaGraphicsMapResources(1, &resource));
+			CHECK_CUDA(cudaGraphicsSubResourceGetMappedArray(&array, resource, 0, 0));
+			CHECK_CUDA(cudaMemcpy2DToArray(array, 0, 0, devBytes, sizeX, sizeX, sizeY, cudaMemcpyDeviceToDevice));
+			CHECK_CUDA(cudaGraphicsUnmapResources(1, &resource));
+			CHECK_CUDA(cudaGraphicsUnregisterResource(resource));
+
+			field2DShader.setTransformationProjectionMatrix(camera.projectionMatrix() * camera.cameraMatrix());
+			field2DShader.drawTexture(texture, posX, posY);
+		};
+		drawQueue.push(drawLambda);
+	}
 private:
 
 	void viewportEvent(ViewportEvent& event) override

@@ -33,3 +33,52 @@ __global__ void kApplyVelocity(count_t count, float dt, const Vec2f* vel, Vec2f*
 		pos[i] += dt * vel[i];
 	}
 }
+
+__global__ void kGameOfLife(unsigned char* in, unsigned char* out, int width, int height)
+{
+	int tid = blockIdx.x * blockDim.x + threadIdx.x;
+	int x = tid % width;
+	int y = tid / width;
+	if (x >= width || y >= height) {
+		return;
+	}
+
+	unsigned char currValue;
+	unsigned char count = 0;
+	for (int dy = -1; dy <= 1; ++dy) {
+		for (int dx = -1; dx <= 1; ++dx) {
+			if (!(0 <= x + dx && x + dx < width)) {
+				continue;
+			}
+			if (!(0 <= y + dy && y + dy < height)) {
+				continue;
+			}
+			if (dx == 0 && dy == 0) {
+				currValue = in[y*width + x];
+				continue;
+			}
+			count += (in[width * (y+dy) + (x+dx)] == 255) ? 1 : 0;
+		}
+	}
+	unsigned char nextValue = currValue;
+	if (currValue < 255 && count == 3) {
+		nextValue = 255; // becomes alive
+	}
+	if (currValue == 255) {
+		bool stayAlive = (count == 2 || count == 3);
+		nextValue = stayAlive ? 255 : 100;
+	}
+	if (nextValue < 255 && nextValue > 0) {
+		nextValue -= 2;
+	}
+
+	out[y * width + x] = nextValue;
+}
+
+// TODO: tmp workaround, remove me
+__global__ void kSplit(unsigned char* data)
+{
+	int tid = threadIdx.x + blockDim.x * blockIdx.x;
+	unsigned char* v = &data[tid];
+	*v = *v > 127 ? 255 : 0;
+}
