@@ -20,13 +20,15 @@
 #include <Vector.hpp>
 #include <Field2DShader.hpp>
 
+#include <cuda_runtime_api.h>
+
 struct Visualizer : public Magnum::Platform::Application
 {
 	// TODO: Add documentation (units!)
-	constexpr static float INITIAL_RENDER_DISTANCE = 16.0f;
+	constexpr static float INITIAL_RENDER_DISTANCE = 2.0f;
 	constexpr static float CAMERA_PAN_SPEED = 0.016f;
 	constexpr static float CAMERA_ZOOM_SPEED = 0.032f;
-	constexpr static Magnum::Vector2 INITAL_CAMERA_POSITION = {2048.f, 2048.f};
+	constexpr static Magnum::Vector2 INITAL_CAMERA_POSITION = {0.f, 0.f};
 
 public:
 	Visualizer(int argc, char** argv) : Visualizer({argc, argv}, makeCLIArgs({argc, argv})) {}
@@ -35,6 +37,8 @@ public:
 	void setUserGUI(std::function<void()> userGUI);
 	void renderParticles(count_t count, Vec2f* dPosition, float* dRadius, Vec4f* dColor);
 	void renderTexture(float posX, float posY, int sizeX, int sizeY, void* devBytes);
+	void setCameraCenter(float posX, float posY);
+	void setCameraMinRange(float range);
 
 private:
 	Visualizer(const Arguments& args, const Corrade::Utility::Arguments& cliArgs);

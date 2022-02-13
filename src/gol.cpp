@@ -16,6 +16,8 @@ return EXIT_FAILURE;}} while(0)
 int main(int argc, char** argv)
 {
 	Visualizer v(argc, argv);
+	v.setCameraCenter(1.5*4096, 4096);
+	v.setCameraMinRange(2*4096);
 	const int sizeX = 4092;
 	const int sizeY = 4092;
 

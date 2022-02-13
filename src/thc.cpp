@@ -2,9 +2,11 @@
 
 #include <fmt/format.h>
 
-#include <Visualizer.hpp>
 #include <Vector.hpp>
+#include <Visualizer.hpp>
 #include <cuda/kernels.hpp>
+#include <internal/macros.hpp>
+#include <ResourceManager.hpp>
 
 std::default_random_engine engine;
 
@@ -58,6 +60,8 @@ int main(int argc, char** argv)
 {
 	constexpr count_t count = 16384 * 1;
 	Visualizer vis(argc, argv);
+	vis.setCameraCenter(1.0, 1.0);
+	vis.setCameraMinRange(3.0);
 
 	std::vector<Vec4f> colors = {
 		{1.0f, 0.0f, 0.0f, 0.8f},
@@ -113,7 +117,7 @@ int main(int argc, char** argv)
 	bool shouldContinue;
 	do {
 		for (auto&& pg : particleGroups){
-			cm.runSync1D(count, 256, kApplyVelocity, count, dt, pg.velocity, pg.position);
+			rm.run({count}, kApplyVelocity, count, dt, pg.velocity, pg.position);
 			vis.renderParticles(count, pg.position, pg.radius, pg.color);
 		}
 		vis.redraw();
