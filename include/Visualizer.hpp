@@ -38,7 +38,7 @@
 #include <cuda/kernels.hpp>
 #include <Vector.hpp>
 #include <Matrix.hpp>
-#include <ComputeManager.hpp>
+#include <ResourceManager.hpp>
 #include <Corrade/Utility/Arguments.h>
 #include <Magnum/GL/RectangleTexture.h>
 #include <Field2DShader.hpp>
