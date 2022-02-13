@@ -13,6 +13,7 @@
 
 #include <Corrade/Containers/Reference.h>
 #include <Corrade/Utility/Resource.h>
+#include <fmt/format.h>
 
 using namespace Magnum;
 

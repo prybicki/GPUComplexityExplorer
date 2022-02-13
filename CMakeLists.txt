@@ -29,14 +29,19 @@ find_package(MagnumIntegration REQUIRED ImGui)
 corrade_add_resource(ShaderSources include/internal/shaders/shaders.conf)
 
 add_library(GPUKernels src/cuda/kernels.cu)
-target_include_directories(GPUKernels PRIVATE include)
+target_include_directories(GPUKernels PUBLIC include)
 
-add_executable(THC src/gol.cpp ${ShaderSources} src/ResourceManager.cpp src/Visualizer.cpp src/Field2DShader.cpp)
-target_include_directories(THC PRIVATE include ${CUDAToolkit_INCLUDE_DIRS})
+#add_library(ShaderSources )
+#target_link_libraries(ShaderSources PRIVATE Corrade::Utility)
 
-target_link_libraries(THC
-	# Internal modules
-	GPUKernels
+add_library(THC
+	src/ResourceManager.cpp
+	src/Visualizer.cpp
+	src/Field2DShader.cpp
+)
+target_include_directories(THC PRIVATE ${CUDAToolkit_INCLUDE_DIRS})
+target_include_directories(THC PUBLIC include)
+target_link_libraries(THC PUBLIC
 	# Magnum modules
 	Magnum::Application
 	Magnum::GL
@@ -53,6 +58,8 @@ target_link_libraries(THC
 	CUDA::cudart
 	CUDA::curand
 	ImPlot
+	GPUKernels
+	Corrade::Utility
 )
 
 if (${CMAKE_CUDA_COMPILER_ID} STREQUAL "Clang")
@@ -60,5 +67,14 @@ if (${CMAKE_CUDA_COMPILER_ID} STREQUAL "Clang")
 	# This makes it impossible to obtain kernel address from .cpp translation unit.
 	# To fix this, all project files needs to be compiled as if they were cuda files,
 	# since then clang is generates correct relocations in .cpp files.
-	target_compile_options(THC PRIVATE --language=cuda --cuda-host-only)
+	target_compile_options(THC PUBLIC --language=cuda --cuda-host-only)
 endif()
+
+# FIXME: ShaderSources are not visible if linked indirectly (to THC).
+# As a temporary workaround, they are compiled with each app.
+
+add_executable(gol src/gol.cpp ${ShaderSources})
+target_link_libraries(gol THC)
+
+add_executable(thc src/thc.cpp ${ShaderSources})
+target_link_libraries(thc THC)

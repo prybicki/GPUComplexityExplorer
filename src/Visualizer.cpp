@@ -46,8 +46,9 @@ Visualizer::Visualizer(const Arguments &args, const Utility::Arguments &cliArgs)
 	// GL::Renderer::setBlendFunction(
 	// 		GL::Renderer::BlendFunction::SourceAlpha,
 	// 		GL::Renderer::BlendFunction::DestinationAlpha);
-	currentZoom = INITIAL_RENDER_DISTANCE / std::min(windowSize().x(), windowSize().y());
-	cameraObject.translate(INITAL_CAMERA_POSITION);
+
+	setCameraCenter(INITAL_CAMERA_POSITION.x(), INITAL_CAMERA_POSITION.y());
+	setCameraMinRange(INITIAL_RENDER_DISTANCE);
 
 	_imgui = ImGuiIntegration::Context(Vector2{windowSize()} / dpiScaling(), windowSize(), framebufferSize());
 	implotCtx = ImPlot::CreateContext();
@@ -63,6 +64,16 @@ Visualizer::Visualizer(const Arguments &args, const Utility::Arguments &cliArgs)
 void Visualizer::setUserGUI(std::function<void()> userGUI)
 {
 	this->userGUI = userGUI;
+}
+
+void Visualizer::setCameraCenter(float posX, float posY)
+{
+	cameraObject.translate({posX, posY});
+}
+
+void Visualizer::setCameraMinRange(float range)
+{
+	currentZoom = range / std::min(windowSize().x(), windowSize().y());
 }
 
 Utility::Arguments Visualizer::makeCLIArgs(const Arguments &args)
@@ -160,7 +171,6 @@ void Visualizer::viewportEvent(ViewportEvent &event)
 	// 	event.framebufferSize().x(), event.framebufferSize().y(),
 	// 	event.dpiScaling().x(), event.dpiScaling().y());
 	GL::defaultFramebuffer.setViewport({{}, event.framebufferSize()});
-	updateProjectionMatrix();
 
 	_imgui.relayout(Vector2{event.windowSize()} / event.dpiScaling(), event.windowSize(), event.framebufferSize());
 }
@@ -229,13 +239,13 @@ void Visualizer::handleKeyboard()
 	if (pressedKeys.contains(KeyEvent::Key::Esc)) {
 		this->exit(0);
 	}
-	updateProjectionMatrix();
 }
 
 void Visualizer::drawEvent()
 {
 	handleKeyboard();
 	GL::defaultFramebuffer.clear(GL::FramebufferClear::Color);
+	updateProjectionMatrix();
 	while (!drawQueue.empty()) {
 		std::invoke(drawQueue.front());
 		drawQueue.pop();
