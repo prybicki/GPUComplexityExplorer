@@ -2,11 +2,11 @@
 
 #include <fmt/format.h>
 
-struct ComputeManager
+struct ResourceManager
 {
-	static ComputeManager& instance()
+	static ResourceManager& instance()
 	{
-		static ComputeManager instance;
+		static ResourceManager instance;
 		return instance;
 	}
 
@@ -22,7 +22,7 @@ struct ComputeManager
 	}
 
 private:
-	ComputeManager() {}
+	ResourceManager() {}
 
 	template<typename T, typename... Ts>
 	std::vector<void*> intoPointers(T& arg, Ts&... args)
@@ -39,4 +39,4 @@ private:
 	}
 };
 
-ComputeManager& cm = ComputeManager::instance();
+ResourceManager& cm = ResourceManager::instance();
