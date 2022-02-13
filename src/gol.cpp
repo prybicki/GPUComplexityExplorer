@@ -1,6 +1,9 @@
 #include <Visualizer.hpp>
 #include <curand.h>
 #include <unistd.h>
+#include <ResourceManager.hpp>
+
+#include <cuda/kernels.hpp>
 
 #define CUDA_CALL(x) do { if((x)!=cudaSuccess) { \
 printf("Error at %s:%d\n",__FILE__,__LINE__);\
