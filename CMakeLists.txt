@@ -31,7 +31,7 @@ corrade_add_resource(ShaderSources include/internal/shaders/shaders.conf)
 add_library(GPUKernels src/cuda/kernels.cu)
 target_include_directories(GPUKernels PRIVATE include)
 
-add_executable(THC src/gol.cpp ${ShaderSources} src/ResourceManager.cpp)
+add_executable(THC src/gol.cpp ${ShaderSources} src/ResourceManager.cpp src/Visualizer.cpp src/Field2DShader.cpp)
 target_include_directories(THC PRIVATE include ${CUDAToolkit_INCLUDE_DIRS})
 
 target_link_libraries(THC
