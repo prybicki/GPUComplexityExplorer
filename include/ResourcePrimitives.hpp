@@ -1,6 +1,7 @@
 #pragma once
 
 #include <internal/aliases.hpp>
+#include <typeindex>
 #include <array>
 
 struct ThreadsLayout
@@ -17,3 +18,39 @@ private:
 	dim3 blockDim;
 	friend struct ResourceManager;
 };
+
+struct ValueType
+{
+	template<typename T>
+	static ValueType create() {
+		static_assert(std::is_trivially_copyable<T>::value);
+		static_assert(std::is_trivially_constructible<T>::value);
+		return ValueType(std::type_index(typeid(T)), sizeof(T));
+	}
+
+	std::size_t getElementSize() { return elementSize; }
+	operator std::type_index() { return typeIndex; }
+
+private:
+	ValueType(std::type_index typeIndex, std::size_t elementSize) : typeIndex(typeIndex), elementSize(elementSize) {}
+
+private:
+	std::type_index typeIndex;
+	std::size_t elementSize;
+};
+
+
+struct DeviceMemory
+{
+private:
+	DeviceMemory(void* ptr, count_t elemCount, ValueType valueType) : ptr(ptr), elemCount(elemCount), valueType(valueType) {}
+
+private:
+	void* ptr;
+	count_t elemCount;
+	ValueType valueType;
+
+	friend struct ResourceManager;
+};
+
+using memory_t = std::shared_ptr<DeviceMemory>;

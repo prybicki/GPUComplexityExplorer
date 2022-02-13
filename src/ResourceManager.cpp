@@ -24,3 +24,9 @@ ThreadsLayout::ThreadsLayout(count_t launchDim, count_t blockDim)
 , blockDim(static_cast<unsigned>(blockDim))
 {}
 
+memory_t ResourceManager::memoryAllocate(ValueType valueType, count_t elements)
+{
+	void* ptr = nullptr;
+	CHECK_CUDA(cudaMalloc(&ptr, valueType.getElementSize() * elements));
+	return std::shared_ptr<DeviceMemory>(new DeviceMemory(ptr, elements, valueType));
+}
