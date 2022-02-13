@@ -66,7 +66,7 @@ int main(int argc, char** argv)
 	for (int y = 0; y < megaY; ++y) {
 		for (int x = 0; x < megaX; ++x) {
 			CURAND_CALL(curandGenerate(gen, (unsigned int*) curr[y][x], sizeX * sizeY / 4));
-			cm.runSync1D(sizeX * sizeY, 256, kSplit, curr[y][x]);
+			rm.run({sizeX * sizeY}, kSplit, curr[y][x]);
 		}
 	}
 	bool play = false;
@@ -88,7 +88,7 @@ int main(int argc, char** argv)
 		if (play) {
 			for (int y = 0; y < megaY; ++y) {
 				for (int x = 0; x < megaX; ++x) {
-					cm.runSync1D(sizeX * sizeY, 256, kGameOfLife, curr[y][x], next[y][x], sizeX, sizeY);
+					rm.run({sizeX * sizeY}, kGameOfLife, curr[y][x], next[y][x], sizeX, sizeY);
 					std::swap(curr[y][x], next[y][x]);
 				}
 			}

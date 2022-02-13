@@ -162,7 +162,7 @@ public:
 			assert(dTransformSize == sizeof(Mat3x3f) * count);
 
 			CHECK_CUDA(cudaMemcpy(colorBufferPtr, dColor, sizeof(Vec4f) * count, cudaMemcpyDeviceToDevice));
-			cm.runSync1D(count, 256, kPos2DToTransform3x3, count, dPosition, dRadius, transformBufferPtr);
+			rm.run({count}, kPos2DToTransform3x3, count, dPosition, dRadius, transformBufferPtr);
 
 			CHECK_CUDA(cudaGraphicsUnmapResources(1, &transformResource));
 			CHECK_CUDA(cudaGraphicsUnmapResources(1, &colorResource));
