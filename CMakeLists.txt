@@ -76,11 +76,4 @@ if (${CMAKE_CUDA_COMPILER_ID} STREQUAL "Clang")
 	target_compile_options(THC PUBLIC --language=cuda --cuda-host-only)
 endif()
 
-# FIXME: ShaderSources are not visible if linked indirectly (to THC).
-# As a temporary workaround, they are compiled with each app.
-
-add_executable(gol src/gol.cpp)
-target_link_libraries(gol THC)
-
-add_executable(thc src/thc.cpp)
-target_link_libraries(thc THC)
+add_subdirectory(apps)
