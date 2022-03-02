@@ -5,7 +5,7 @@
 #include <Vector.hpp>
 #include <Visualizer.hpp>
 #include <cuda/kernels.hpp>
-#include <internal/macros.hpp>
+#include <macros.hpp>
 #include <ResourceManager.hpp>
 
 std::default_random_engine engine;

@@ -1,6 +1,6 @@
 #include <ResourceManager.hpp>
 
-#include <internal/macros.hpp>
+#include <macros.hpp>
 
 #include <cuda_runtime_api.h>
 #include <ResourcePrimitives.hpp>

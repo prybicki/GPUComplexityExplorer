@@ -19,7 +19,7 @@
 
 #include <implot.h>
 
-#include <internal/macros.hpp>
+#include <macros.hpp>
 #include <cuda/kernels.hpp>
 
 #include <ResourceManager.hpp>
