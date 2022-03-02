@@ -135,14 +135,14 @@ void Visualizer::renderParticles(count_t count, Vec2f *dPosition, float *dRadius
 	drawQueue.push(drawLambda);
 }
 
-void Visualizer::renderTexture(float posX, float posY, int sizeX, int sizeY, void *devBytes)
+void Visualizer::renderTexture(float posX, float posY, int sizeX, int sizeY, color_t* devColors)
 {
 	std::function drawLambda = [=](){
 	GL::RectangleTexture texture;
 	cudaGraphicsResource_t resource;
 	cudaArray_t array;
 
-	texture.setStorage(GL::TextureFormat::R8, {sizeX, sizeY});
+	texture.setStorage(GL::TextureFormat::RGBA8, {sizeX, sizeY});
 	texture.setMinificationFilter(GL::SamplerFilter::Nearest);
 	texture.setMagnificationFilter(GL::SamplerFilter::Nearest);
 	CHECK_CUDA(cudaGraphicsGLRegisterImage(&resource,
@@ -151,7 +151,7 @@ void Visualizer::renderTexture(float posX, float posY, int sizeX, int sizeY, voi
 	                                       cudaGraphicsRegisterFlagsWriteDiscard));
 	CHECK_CUDA(cudaGraphicsMapResources(1, &resource));
 	CHECK_CUDA(cudaGraphicsSubResourceGetMappedArray(&array, resource, 0, 0));
-	CHECK_CUDA(cudaMemcpy2DToArray(array, 0, 0, devBytes, sizeX, sizeX, sizeY, cudaMemcpyDeviceToDevice));
+	CHECK_CUDA(cudaMemcpy2DToArray(array, 0, 0, devColors, sizeX * sizeof(color_t), sizeX * sizeof(color_t), sizeY, cudaMemcpyDeviceToDevice));
 	CHECK_CUDA(cudaGraphicsUnmapResources(1, &resource));
 	CHECK_CUDA(cudaGraphicsUnregisterResource(resource));
 

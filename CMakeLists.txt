@@ -37,9 +37,7 @@ add_library(ShaderSources src/ShaderSources.cpp ${ShaderResources})
 target_link_libraries(ShaderSources Corrade::Utility)
 
 add_library(GPUKernels src/cuda/kernels.cu)
-
-#add_library(ShaderSources )
-#target_link_libraries(ShaderSources PRIVATE Corrade::Utility)
+#set_property(TARGET GPUKernels PROPERTY CUDA_SEPARABLE_COMPILATION ON)
 
 add_library(THC
 	src/ResourceManager.cpp
@@ -58,14 +56,14 @@ target_link_libraries(THC
 	Magnum::Primitives
 	Magnum::DebugTools
 	MagnumIntegration::ImGui
-	MagnumPlugins::StbImageImporter
+#	MagnumPlugins::StbImageImporter
 	# Other dependencies
 	fmt::fmt
 	CUDA::cudart
 	CUDA::curand
 	ImPlot
 	GPUKernels
-    ShaderSources
+	ShaderSources
 )
 
 if (${CMAKE_CUDA_COMPILER_ID} STREQUAL "Clang")

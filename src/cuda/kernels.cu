@@ -82,3 +82,54 @@ __global__ void kSplit(unsigned char* data)
 	unsigned char* v = &data[tid];
 	*v = *v > 127 ? 255 : 0;
 }
+
+// __device__ float dNormalizeU8(uint8_t in)
+// {
+// 	return (static_cast<float>(in) / 255.0f);
+// }
+
+// __device__ float dIdentity(float in)
+// {
+// 	return in;
+// }
+
+// __device__ float (*dPtrNormalizeU8)(uint8_t) = dNormalizeU8;
+//
+// template<typename InputType>
+// __global__ void kColorizeBlackToWhite(count_t count, InputType* in, color_t* out, float (*normalize)(InputType))
+// {
+// 	int tid = threadIdx.x + blockIdx.x * blockDim.x;
+// 	if (tid >= count) {
+// 		return;
+// 	}
+// 	// TODO: test it (does it cover whole range?)
+// 	uint8_t value = static_cast<uint8_t>(255.0f * normalize(in[tid]));
+// 	out[tid].r = value;
+// 	out[tid].g = value;
+// 	out[tid].b = value;
+// 	out[tid].a = 255;
+// }
+//
+// template __global__ void kColorizeBlackToWhite<uint8_t>(count_t count, uint8_t* in, color_t* out, float (*normalize)(uint8_t));
+// template __global__ void kColorizeBlackToWhite<float>(count_t count, float* in, color_t* out, float (*normalize)(float));
+
+__global__ void kTmpColorizeCustomU8(count_t count, const uint8_t* in, color_t* out)
+{
+	int tid = threadIdx.x + blockIdx.x * blockDim.x;
+	if (tid >= count) {
+		return;
+	}
+	bool even = (tid % 2) == 0;
+	bool odd = !even;
+	if (in[tid] < 128) {
+		out[tid].r = (1+even) * in[tid];
+		out[tid].b = (1+odd) * in[tid];
+		out[tid].g = 0;
+	}
+	else {
+		out[tid].r = 0;
+		out[tid].g = in[tid];
+		out[tid].b = in[tid];
+	}
+	out[tid].a = 255;
+}

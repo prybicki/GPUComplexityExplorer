@@ -4,6 +4,7 @@
 #include <ResourceManager.hpp>
 
 #include <cuda/kernels.hpp>
+#include <macros.hpp>
 
 #define CUDA_CALL(x) do { if((x)!=cudaSuccess) { \
 printf("Error at %s:%d\n",__FILE__,__LINE__);\
@@ -63,6 +64,12 @@ int main(int argc, char** argv)
 		}
 	}
 
+	color_t* colorsTemp = nullptr;
+	CHECK_CUDA(cudaMalloc(&colorsTemp, sizeof(color_t) * sizeX * sizeY));
+	// float (*sNormalizeU8)(uint8_t) = nullptr;
+	// CHECK_CUDA(cudaMemcpyFromSymbol(&sNormalizeU8, dPtrNormalizeU8, sizeof(sNormalizeU8)));
+
+
 	curandGenerator_t gen;
 	CURAND_CALL(curandCreateGenerator(&gen, CURAND_RNG_PSEUDO_DEFAULT));
 	CURAND_CALL(curandSetPseudoRandomGeneratorSeed(gen, 1234ULL));
@@ -87,7 +94,8 @@ int main(int argc, char** argv)
 	while(shouldContinue) {
 		for (int y = 0; y < megaY; ++y) {
 			for (int x = 0; x < megaX; ++x) {
-				v.renderTexture(x * (sizeX + 16), y * (sizeY+16), sizeX, sizeY, curr[y][x]);
+				rm.run({sizeX * sizeY}, kTmpColorizeCustomU8, sizeX * sizeY, reinterpret_cast<uint8_t*>(curr[y][x]), colorsTemp);
+				v.renderTexture(x * (sizeX + 16), y * (sizeY+16), sizeX, sizeY, colorsTemp);
 			}
 		}
 		if (play) {
@@ -100,6 +108,6 @@ int main(int argc, char** argv)
 			usleep(1000 * sleepMs);
 		}
 		v.redraw();
-		v.mainLoopIteration();
+		shouldContinue = v.mainLoopIteration();
 	}
 }
