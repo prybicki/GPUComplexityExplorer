@@ -6,10 +6,8 @@
 #include <Magnum/GL/Mesh.h>
 #include <Magnum/GL/Renderer.h>
 #include <Magnum/GL/TextureFormat.h>
-#include <Magnum/Math/Angle.h>
 #include <Magnum/Math/Color.h>
 #include <Magnum/Math/Matrix3.h>
-#include <Magnum/Math/Matrix4.h>
 #include <Magnum/MeshTools/Compile.h>
 #include <Magnum/PixelFormat.h>
 #include <Magnum/Primitives/Circle.h>
@@ -27,7 +25,6 @@
 #include <ResourceManager.hpp>
 
 using namespace Magnum;
-
 
 Visualizer::Visualizer(const Arguments &args, const Utility::Arguments &cliArgs)
 		: Platform::Application{args, makeWindowConfig(cliArgs), makeOpenGLConfig()}
@@ -117,8 +114,8 @@ void Visualizer::renderParticles(count_t count, Vec2f *dPosition, float *dRadius
 
 	CHECK_CUDA(cudaGraphicsMapResources(1, &colorResource));
 	CHECK_CUDA(cudaGraphicsMapResources(1, &transformResource));
-	CHECK_CUDA(cudaGraphicsResourceGetMappedPointer((void**) &colorBufferPtr, &dColorSize, colorResource));
-	CHECK_CUDA(cudaGraphicsResourceGetMappedPointer((void**) &transformBufferPtr, &dTransformSize, transformResource));
+	CHECK_CUDA(cudaGraphicsResourceGetMappedPointer(reinterpret_cast<void**>(&colorBufferPtr), &dColorSize, colorResource));
+	CHECK_CUDA(cudaGraphicsResourceGetMappedPointer(reinterpret_cast<void**>(&transformBufferPtr), &dTransformSize, transformResource));
 	assert(dColorSize == sizeof(Vec4f) * count);
 	assert(dTransformSize == sizeof(Mat3x3f) * count);
 
