@@ -7,6 +7,7 @@
 
 struct ThreadsLayout
 {
+	// TODO: this is ambiguous
 	ThreadsLayout(count_t launchDims, count_t blockDims=256);
 	// ThreadLayout(std::array<count_t, 1> launchDims, std::array<count_t, 1> blockDims={256});
 	ThreadsLayout(std::array<count_t, 2> launchDims, std::array<count_t, 2> blockDims={16, 16});

@@ -5,8 +5,10 @@ cmake_minimum_required(VERSION 3.17)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CUDA_STANDARD 20)
 set(CMAKE_CXX_COMPILER clang++-12)
-set(CMAKE_CUDA_COMPILER clang-12)
+#set(CMAKE_CUDA_COMPILER clang-12)
 project(THC LANGUAGES CXX CUDA)
+
+#set(CMAKE_CUDA_ARCHITECTURES 86-virtual)
 
 # Configure and compile Magnum
 include(cmake/ConfigureMagnum.cmake)
@@ -23,7 +25,10 @@ find_package(CUDAToolkit REQUIRED)
 find_package(Magnum REQUIRED GL GlfwApplication Trade AnyImageImporter Shaders MeshTools Primitives DebugTools)
 find_package(MagnumIntegration REQUIRED ImGui)
 find_package(Corrade REQUIRED Utility)
-set_directory_properties(PROPERTIES CORRADE_USE_PEDANTIC_FLAGS ON)
+
+# TODO: this causes error with NVCC:
+# nvcc fatal   : Value 'return-type' is not defined for option 'Werror'
+#set_directory_properties(PROPERTIES CORRADE_USE_PEDANTIC_FLAGS ON)
 
 # ---------------- Define project artifacts ---------------- #
 

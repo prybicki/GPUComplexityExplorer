@@ -32,3 +32,12 @@ __global__ void kSplit(unsigned char* data);
 
 // Temporary manual solution:
 __global__ void kTmpColorizeCustomU8(count_t count, const uint8_t* in, color_t* out);
+
+__global__ void kTmpColorizeCustomF32(count_t count, const float* in, const float* inMin, const float*inMax,  color_t* out);
+
+#include <NCube.hpp>
+
+// TODO: Can gridDim represent actual data size?
+__global__ void kTmpSetNCube(count_t width, count_t height, float* data, NCube2i rect, float value);
+
+__global__ void kHeatTransfer(count_t width, count_t height, const float* curr, float* next, float coeff);

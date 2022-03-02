@@ -313,6 +313,7 @@ Visualizer::Configuration Visualizer::makeWindowConfig(const Utility::Arguments 
 Visualizer::GLConfiguration Visualizer::makeOpenGLConfig()
 {
 	GLConfiguration cfg;
+	//cfg.setSampleCount(32);
 	return cfg;
 }
 
