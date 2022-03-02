@@ -20,20 +20,20 @@ private:
 	friend struct ResourceManager;
 };
 
-struct ValueType
+struct TypeInfo
 {
 	template<typename T>
-	static ValueType create() {
+	static TypeInfo create() {
 		static_assert(std::is_trivially_copyable<T>::value);
 		static_assert(std::is_trivially_constructible<T>::value);
-		return ValueType(std::type_index(typeid(T)), sizeof(T));
+		return TypeInfo(std::type_index(typeid(T)), sizeof(T));
 	}
 
 	std::size_t getElementSize() { return elementSize; }
 	operator std::type_index() { return typeIndex; }
 
 private:
-	ValueType(std::type_index typeIndex, std::size_t elementSize) : typeIndex(typeIndex), elementSize(elementSize) {}
+	TypeInfo(std::type_index typeIndex, std::size_t elementSize) : typeIndex(typeIndex), elementSize(elementSize) {}
 
 private:
 	std::type_index typeIndex;
@@ -44,12 +44,12 @@ private:
 struct DeviceMemory
 {
 private:
-	DeviceMemory(void* ptr, count_t elemCount, ValueType valueType) : ptr(ptr), elemCount(elemCount), valueType(valueType) {}
+	DeviceMemory(void* ptr, count_t elemCount, TypeInfo valueType) : ptr(ptr), elemCount(elemCount), valueType(valueType) {}
 
 private:
 	void* ptr;
 	count_t elemCount;
-	ValueType valueType;
+	TypeInfo valueType;
 
 	friend struct ResourceManager;
 };

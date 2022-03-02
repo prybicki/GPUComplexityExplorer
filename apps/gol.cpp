@@ -74,7 +74,7 @@ int main(int argc, char** argv)
 			rm.run({sizeX * sizeY}, kSplit, curr[y][x]);
 		}
 	}
-	bool play = false;
+	bool play = true;
 	int sleepMs = 0;
 	v.setUserGUI([&](){
 		ImGui::Begin("Control", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
