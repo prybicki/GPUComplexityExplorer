@@ -21,6 +21,7 @@
 #include <Field2DShader.hpp>
 
 #include <cuda_runtime_api.h>
+#include "color_t.hpp"
 
 struct Visualizer : public Magnum::Platform::Application
 {
@@ -36,7 +37,7 @@ public:
 
 	void setUserGUI(std::function<void()> userGUI);
 	void renderParticles(count_t count, Vec2f* dPosition, float* dRadius, Vec4f* dColor);
-	void renderTexture(float posX, float posY, int sizeX, int sizeY, void* devBytes);
+	void renderTexture(float posX, float posY, int sizeX, int sizeY, color_t* devColors);
 	void setCameraCenter(float posX, float posY);
 	void setCameraMinRange(float range);
 
