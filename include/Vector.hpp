@@ -6,7 +6,7 @@
 
 #include <fmt/format.h>
 
-#include <internal/aliases.hpp>
+#include <aliases.hpp>
 
 #ifndef __CUDACC__
 #define __host__

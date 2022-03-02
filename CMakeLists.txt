@@ -30,7 +30,7 @@ set_directory_properties(PROPERTIES CORRADE_USE_PEDANTIC_FLAGS ON)
 include_directories(include)
 
 # Add resources compiled into the binary (e.g. shaders)
-corrade_add_resource(ShaderResources include/internal/shaders/shaders.conf)
+corrade_add_resource(ShaderResources shaders/shaders.conf)
 
 # RAII Wrapper for ShaderResources
 add_library(ShaderSources src/ShaderSources.cpp ${ShaderResources})

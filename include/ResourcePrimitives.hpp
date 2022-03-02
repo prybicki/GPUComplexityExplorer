@@ -1,6 +1,6 @@
 #pragma once
 
-#include <internal/aliases.hpp>
+#include <aliases.hpp>
 #include <typeindex>
 #include <array>
 #include <vector_types.h>
