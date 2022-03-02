@@ -22,7 +22,7 @@ __global__ void kPos2DToTransform3x3(count_t count, const Vec2f* position, const
 		Mat3x3f transform = {Mat3x3f::IdentityInitT{}, 1.0f};
 		transform[0][0] = radius[i];
 		transform[1][1] = radius[i];
-		transform.refColumn<2>() = Vec3f(position[i], 1);
+		transform.refColumn<2>() = Vec3f(position[i], 1.0f);
 		outTransform[i] = transform;
 	}
 }
@@ -132,4 +132,105 @@ __global__ void kTmpColorizeCustomU8(count_t count, const uint8_t* in, color_t* 
 		out[tid].b = in[tid];
 	}
 	out[tid].a = 255;
+}
+
+// __global__ void kTmpColorizeCustomF32(count_t count, const float* in, const float* inMin, const float* inMax,  color_t* out)
+// {
+// 	int tid = threadIdx.x + blockIdx.x * blockDim.x;
+// 	if (tid >= count) {
+// 		return;
+// 	}
+// 	// float min = *inMin;
+// 	// float max = *inMax;
+// 	float min = 0.0f;
+// 	float max = 1.0f;
+// 	uint8_t value = static_cast<uint8_t>(255 * (in[tid] - min) / (max - min));
+// 	out[tid].r = value;
+// 	out[tid].g = 0;
+// 	out[tid].b = 0;
+// 	out[tid].a = 255;
+// }
+
+__global__ void kTmpColorizeCustomF32(count_t count, const float* in, const float* inMin, const float* inMax,  color_t* out)
+{
+	int tid = threadIdx.x + blockIdx.x * blockDim.x;
+	if (tid >= count) {
+		return;
+	}
+	// float min = *inMin;
+	// float max = *inMax;
+	float min = 0.0f;
+	float max = 1.0f;
+	float fval = (in[tid] - min) / (max - min);
+
+	if (fval < 0.2) {
+		float progress = (fval - 0.0f) / 0.2f;
+		uint8_t uval = static_cast<uint8_t>(255.0f * progress);
+		out[tid].r = uval;
+		out[tid].g = 0;
+		out[tid].b = 0;
+	}
+	else if (fval < 0.4) {
+		float progress = (fval - 0.2f) / 0.2f;
+		uint8_t uval = static_cast<uint8_t>(255.0f * progress);
+		out[tid].r = 255;
+		out[tid].g = uval;
+		out[tid].b = 0;
+	}
+	else if (fval < 0.6) {
+		float progress = (fval - 0.4f) / 0.2f;
+		uint8_t uval = static_cast<uint8_t>(255.0f * progress);
+		out[tid].r = 255-uval;
+		out[tid].g = 255;
+		out[tid].b = 0;
+	}
+	else if (fval < 0.8) {
+		float progress = (fval - 0.6f) / 0.2f;
+		uint8_t uval = static_cast<uint8_t>(255.0f * progress);
+		out[tid].r = 0;
+		out[tid].g = 255;
+		out[tid].b = uval;
+	}
+	else {
+		float progress = (fval - 0.8f) / 0.2f;
+		uint8_t uval = static_cast<uint8_t>(255.0f * progress);
+		out[tid].r = 0;
+		out[tid].g = 255-uval;
+		out[tid].b = 255;
+	}
+	out[tid].a = 255;
+}
+
+__global__ void kTmpSetNCube(count_t width, count_t height, float* data, NCube2i rect, float value)
+{
+	int tX = threadIdx.x + blockIdx.x * blockDim.x;
+	int tY = threadIdx.y + blockIdx.y * blockDim.y;
+	bool inRange = (tX < width) && (tY < height);
+	bool inNCube = (rect.min.x() <= tX) && (tX < rect.max.x())
+	            && (rect.min.y() <= tY) && (tY < rect.max.y());
+	if (!inRange || !inNCube) {
+		return;
+	}
+	data[tX + tY * width] = value;
+}
+
+__global__ void kHeatTransfer(count_t width, count_t height, const float* curr, float* next, float coeff)
+{
+	int tX = threadIdx.x + blockIdx.x * blockDim.x;
+	int tY = threadIdx.y + blockIdx.y * blockDim.y;
+	bool inRange = (tX < width) && (tY < height);
+	if (!inRange) {
+		return;
+	}
+	bool isBorder = (tX == 0) || (tY == 0) || (tX == width - 1) || (tY == height - 1);
+	if (isBorder) {
+		next[tX + tY * width] = 0.0f;
+		return;
+	}
+
+	next[tX + tY * width] = curr[tX + tY * width];
+	next[tX + tY * width] += coeff * (curr[(tX+1) + (tY) * width] - curr[tX + tY * width]);
+	next[tX + tY * width] += coeff * (curr[(tX-1) + (tY) * width] - curr[tX + tY * width]);
+	next[tX + tY * width] += coeff * (curr[(tX) + (tY+1) * width] - curr[tX + tY * width]);
+	next[tX + tY * width] += coeff * (curr[(tX) + (tY-1) * width] - curr[tX + tY * width]);
 }

@@ -24,6 +24,13 @@ ThreadsLayout::ThreadsLayout(count_t launchDim, count_t blockDim)
 , blockDim(static_cast<unsigned>(blockDim))
 {}
 
+ThreadsLayout::ThreadsLayout(std::array<count_t, 2> launchDims, std::array<count_t, 2> blockDims)
+: gridDim(1U + launchDims[0] / blockDims[0], 1U + launchDims[1] / blockDims[1])
+, blockDim(static_cast<unsigned>(blockDims[0]), static_cast<unsigned>(blockDims[1]))
+{
+
+}
+
 memory_t ResourceManager::memoryAllocate(TypeInfo valueType, count_t elements)
 {
 	void* ptr = nullptr;
