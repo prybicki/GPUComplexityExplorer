@@ -22,14 +22,21 @@ find_package(FMT)
 find_package(CUDAToolkit REQUIRED)
 find_package(Magnum REQUIRED GL GlfwApplication Trade AnyImageImporter Shaders MeshTools Primitives DebugTools)
 find_package(MagnumIntegration REQUIRED ImGui)
+find_package(Corrade REQUIRED Utility)
+set_directory_properties(PROPERTIES CORRADE_USE_PEDANTIC_FLAGS ON)
 
 # ---------------- Define project artifacts ---------------- #
 
+include_directories(include)
+
 # Add resources compiled into the binary (e.g. shaders)
-corrade_add_resource(ShaderSources include/internal/shaders/shaders.conf)
+corrade_add_resource(ShaderResources include/internal/shaders/shaders.conf)
+
+# RAII Wrapper for ShaderResources
+add_library(ShaderSources src/ShaderSources.cpp ${ShaderResources})
+target_link_libraries(ShaderSources Corrade::Utility)
 
 add_library(GPUKernels src/cuda/kernels.cu)
-target_include_directories(GPUKernels PUBLIC include)
 
 #add_library(ShaderSources )
 #target_link_libraries(ShaderSources PRIVATE Corrade::Utility)
@@ -40,8 +47,7 @@ add_library(THC
 	src/Field2DShader.cpp
 )
 target_include_directories(THC PRIVATE ${CUDAToolkit_INCLUDE_DIRS})
-target_include_directories(THC PUBLIC include)
-target_link_libraries(THC PUBLIC
+target_link_libraries(THC
 	# Magnum modules
 	Magnum::Application
 	Magnum::GL
@@ -59,7 +65,7 @@ target_link_libraries(THC PUBLIC
 	CUDA::curand
 	ImPlot
 	GPUKernels
-	Corrade::Utility
+    ShaderSources
 )
 
 if (${CMAKE_CUDA_COMPILER_ID} STREQUAL "Clang")
@@ -73,8 +79,8 @@ endif()
 # FIXME: ShaderSources are not visible if linked indirectly (to THC).
 # As a temporary workaround, they are compiled with each app.
 
-add_executable(gol src/gol.cpp ${ShaderSources})
+add_executable(gol src/gol.cpp)
 target_link_libraries(gol THC)
 
-add_executable(thc src/thc.cpp ${ShaderSources})
+add_executable(thc src/thc.cpp)
 target_link_libraries(thc THC)

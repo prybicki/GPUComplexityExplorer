@@ -14,6 +14,7 @@
 #include <Corrade/Containers/Reference.h>
 #include <Corrade/Utility/Resource.h>
 #include <fmt/format.h>
+#include <ShaderSources.hpp>
 
 using namespace Magnum;
 
@@ -22,9 +23,10 @@ struct Vertex {
 	Vector2 textureCoordinates;
 };
 
+const ShaderSources& shaderSources = ShaderSources::instance();
+
 Field2DShader::Field2DShader()
 {
-
 	bindAttributeLocation(Shaders::GenericGL2D::Position::Location, "position");
 	bindAttributeLocation(Shaders::GenericGL2D::TextureCoordinates::Location, "texPosition");
 
