@@ -2,7 +2,7 @@
 
 #include <fmt/format.h>
 
-#include <Vector.hpp>
+#include <math/Vector.hpp>
 #include <Visualizer.hpp>
 #include <cuda/kernels.hpp>
 #include <macros.hpp>

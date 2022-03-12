@@ -5,7 +5,7 @@
 #include <thrust/device_ptr.h>
 #include <cuda/kernels.hpp>
 
-#include <data/data.hpp>
+
 
 #include <unistd.h>
 

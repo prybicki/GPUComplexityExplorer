@@ -17,7 +17,7 @@
 
 #include <implot.h>
 
-#include <Vector.hpp>
+#include <math/Vector.hpp>
 #include <Field2DShader.hpp>
 
 #include <cuda_runtime_api.h>

@@ -1,8 +1,8 @@
 #pragma once
 
 #include <cuda_runtime.h>
-#include <Vector.hpp>
-#include <Matrix.hpp>
+#include <math/Vector.hpp>
+#include <math/Matrix.hpp>
 #include <color_t.hpp>
 
 using count_t = int;
@@ -35,7 +35,7 @@ __global__ void kTmpColorizeCustomU8(count_t count, const uint8_t* in, color_t* 
 
 __global__ void kTmpColorizeCustomF32(count_t count, const float* in, const float* inMin, const float*inMax,  color_t* out);
 
-#include <NCube.hpp>
+#include <math/NCube.hpp>
 
 // TODO: Can gridDim represent actual data size?
 __global__ void kTmpSetNCube(count_t width, count_t height, float* data, NCube2i rect, float value);

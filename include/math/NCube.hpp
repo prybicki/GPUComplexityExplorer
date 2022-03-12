@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Vector.hpp>
+#include <math/Vector.hpp>
 
 template<count_t dim, typename T>
 struct NCube

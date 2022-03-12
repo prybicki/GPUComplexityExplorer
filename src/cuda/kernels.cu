@@ -1,7 +1,7 @@
 #include <cuda/kernels.hpp>
 
-#include <Vector.hpp>
-#include <Matrix.hpp>
+#include <math/Vector.hpp>
+#include <math/Matrix.hpp>
 
 using count_t = int;
 
