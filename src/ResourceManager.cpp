@@ -31,9 +31,9 @@ ThreadsLayout::ThreadsLayout(std::array<count_t, 2> launchDims, std::array<count
 
 }
 
-memory_t ResourceManager::memoryAllocate(TypeInfo valueType, count_t elements)
+memory_t ResourceManager::memoryAllocate(Type valueType, count_t elements)
 {
 	void* ptr = nullptr;
-	CHECK_CUDA(cudaMalloc(&ptr, valueType.getElementSize() * elements));
+	CHECK_CUDA(cudaMalloc(&ptr, valueType.sizeOf() * elements));
 	return std::shared_ptr<DeviceMemory>(new DeviceMemory(ptr, elements, valueType));
 }

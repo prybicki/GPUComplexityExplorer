@@ -5,6 +5,8 @@
 #include <thrust/device_ptr.h>
 #include <cuda/kernels.hpp>
 
+#include <data/data.hpp>
+
 #include <unistd.h>
 
 int main(int argc, char** argv)

@@ -5,6 +5,8 @@
 #include <array>
 #include <vector_types.h>
 
+#include <data/Type.hpp>
+
 struct ThreadsLayout
 {
 	// TODO: this is ambiguous
@@ -21,36 +23,15 @@ private:
 	friend struct ResourceManager;
 };
 
-struct TypeInfo
-{
-	template<typename T>
-	static TypeInfo create() {
-		static_assert(std::is_trivially_copyable<T>::value);
-		static_assert(std::is_trivially_constructible<T>::value);
-		return TypeInfo(std::type_index(typeid(T)), sizeof(T));
-	}
-
-	std::size_t getElementSize() { return elementSize; }
-	operator std::type_index() { return typeIndex; }
-
-private:
-	TypeInfo(std::type_index typeIndex, std::size_t elementSize) : typeIndex(typeIndex), elementSize(elementSize) {}
-
-private:
-	std::type_index typeIndex;
-	std::size_t elementSize;
-};
-
-
 struct DeviceMemory
 {
 private:
-	DeviceMemory(void* ptr, count_t elemCount, TypeInfo valueType) : ptr(ptr), elemCount(elemCount), valueType(valueType) {}
+	DeviceMemory(void* ptr, count_t elemCount, Type valueType) : ptr(ptr), elemCount(elemCount), valueType(valueType) {}
 
 private:
 	void* ptr;
 	count_t elemCount;
-	TypeInfo valueType;
+	Type valueType;
 
 	friend struct ResourceManager;
 };
