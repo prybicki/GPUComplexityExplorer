@@ -80,3 +80,6 @@ if (${CMAKE_CUDA_COMPILER_ID} STREQUAL "Clang")
 endif()
 
 add_subdirectory(apps)
+
+enable_testing()
+add_subdirectory(tests)

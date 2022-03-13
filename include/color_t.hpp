@@ -5,6 +5,7 @@
 #include <fmt/format.h>
 #include <type_traits>
 
+// TODO: replace it with Vector alias
 struct color_t {
 	uint8_t r;
 	uint8_t g;

@@ -8,151 +8,97 @@
 
 #include <aliases.hpp>
 
-#ifndef __CUDACC__
-#define __host__
-#define __device__
-#endif // __CUDACC__
+#ifdef __CUDACC__
+	#define HD __host__ __device__
+#else
+	#define HD
+#endif
 
 template<count_t dim, typename T>
-class Vector
+struct Vector
 {
 	using V = Vector<dim, T>;
-	T row[dim];
+	static_assert(dim >= 2);
+// *** *** *** CONSTRUCTORS *** *** *** //
 
-public:
-	__host__ __device__
-	Vector() {
-		for (int i = 0; i < dim; ++i) {
-			row[i] = static_cast<T>(0);
+	// Zero constructor
+	HD Vector() : Vector(static_cast<T>(0)) {}
+
+	// Uniform constructor
+	HD Vector(T scalar) {
+		for (auto&& v : row) {
+			v = scalar;
 		}
 	}
 
-	__host__
-	Vector(std::array<T, dim> scalar)
-	{
-		for (int i = 0; i < dim; ++i) {
-			row[i] = scalar[i];
-		}
-	}
-
+	// List constructor
 	template<typename... Args>
-	__host__
-	Vector(Args... args) : Vector(std::array<T, dim> {args...}) {}
+	HD Vector(Args... args) : row{static_cast<T>(args)...}
+	{ static_assert(sizeof...(Args) == dim); }
 
-	// Cast constructor
+	// Type cast constructor
 	template<typename U>
-	Vector(const Vector<dim, U>& other) {
+	HD Vector(const Vector<dim, U>& other) {
 		for (count_t i = 0; i < dim; ++i) {
 			row[i] = static_cast<T>(other.row[i]);
 		}
 	}
 
-	template<int lowerDim>
-	__host__ __device__
-	Vector(const Vector<lowerDim, T>& other, T fillValue)
+	// Dimension cast constructor
+	template<count_t lowerDim>
+	HD Vector(const Vector<lowerDim, T>& other, T fillValue)
 	{
 		static_assert(lowerDim < dim);
-		for (int i = 0; i < lowerDim; ++i) {
+		for (count_t i = 0; i < lowerDim; ++i) {
 			row[i] = other[i];
 		}
-		for (int i = lowerDim; i < dim; ++i) {
+		for (count_t i = lowerDim; i < dim; ++i) {
 			row[i] = fillValue;
 		}
 	}
 
-	__host__ __device__
-	V& operator+=(const V& rhs)
-	{
-		for (count_t i = 0; i < dim; ++i) {
-			row[i] += rhs[i];
-		}
-		return *this;
-	}
+// *** *** *** ACCESSORS *** *** *** //
 
-	__host__ __device__
-	friend V operator+(V lhs, const V& rhs)
-	{
-		lhs += rhs;
-		return lhs;
-	}
+HD T* begin() { return row; }
+HD T* end() { return row + dim; }
+HD T& operator[](count_t i) { return row[i]; }
 
-	__host__ __device__
-	V& operator-=(const V& rhs)
-	{
-		for (count_t i = 0; i < dim; ++i) {
-			row[i] -= rhs[i];
-		}
-		return *this;
-	}
+HD const T* begin() const { return row; }
+HD const T* end() const { return row + dim; }
+HD const T& operator[](count_t i) const { return row[i]; }
 
-	__host__ __device__
-	friend V operator-(V lhs, const V& rhs)
-	{
-		lhs -= rhs;
-		return lhs;
-	}
+// *** *** *** PIECEWISE OPERATORS (VECTOR + SCALAR) *** *** *** //
 
-	__host__ __device__
-	V& operator*=(T rhs)
-	{
-		for (count_t i = 0; i < dim; ++i) {
-			row[i] *= rhs;
-		}
-		return *this;
-	}
+#define PIECEWISE_OPERATOR(OP, OPEQ)                                        \
+HD V& operator OPEQ(const V& rhs) {                                         \
+		for (count_t i = 0; i < dim; ++i) {                                 \
+			row[i] OPEQ rhs[i];                                             \
+		}                                                                   \
+		return *this;                                                       \
+}                                                                           \
+HD friend V operator OP(V lhs, const V& rhs) { 	lhs OPEQ rhs; return lhs; } \
+// HD V& operator OPEQ(T rhs) { return (*this) OPEQ V {rhs}; }                 \
+// HD friend V operator OP(T lhs, V rhs) {	rhs OPEQ lhs; return rhs; }         \
+// TODO: scalar operators above are a bit questionable.
 
-	__host__ __device__
-	friend V operator*(T lhs, V rhs)
-	{
-		rhs *= lhs;
-		return rhs;
-	}
+	PIECEWISE_OPERATOR(+, +=)
+	PIECEWISE_OPERATOR(-, -=)
+	PIECEWISE_OPERATOR(*, *=)
+	PIECEWISE_OPERATOR(/, /=)
 
-	__host__ __device__
-	V& operator/=(T rhs)
-	{
-		for (count_t i = 0; i < dim; ++i) {
-			row[i] /= rhs;
-		}
-		return *this;
-	}
+#undef PIECEWISE_OPERATOR
 
-	__host__ __device__
-	friend V operator/(V lhs, T rhs)
-	{
-		lhs /= rhs;
-		return lhs;
-	}
-
-	__host__ __device__
-	T& x() { static_assert(dim > 0); return row[0]; }
-
-	__host__ __device__
-	T& y() { static_assert(dim > 1); return row[1]; }
-
-	__host__ __device__
-	T& z() { static_assert(dim > 2); return row[1]; }
-
-	__host__ __device__
-	T& operator[](int i) { return row[i]; }
-
-	__host__ __device__
-	const T& operator[](int i) const { return row[i]; }
-
-	__host__ __device__
-	T length2() const {
-		T sum = 0;
+	HD T lengthSquared() const {
+		auto sum = static_cast<T>(0);
 		for (count_t i = 0; i < dim; ++i) {
 			sum += row[i] * row[i];
 		}
 		return sum;
 	}
+	HD T length() const { return std::sqrt(lengthSquared()); }
 
-	__host__ __device__
-	T length() const {
-		return std::sqrt(length2());
-	}
-
+private:
+	T row[dim];
 };
 
 #ifndef __CUDACC__
@@ -180,13 +126,16 @@ struct fmt::formatter<Vector<dim, T>>
 #endif // __CUDACC__
 
 
-//template class Vec<2, float>;
 template<typename T>
 using Vec2 = Vector<2, T>;
 using Vec2f = Vector<2, float>;
 using Vec3f = Vector<3, float>;
 using Vec4f = Vector<4, float>;
 
+using Vec2i = Vector<2, int>;
+
 static_assert(std::is_trivially_copyable<Vec2f>::value);
 static_assert(std::is_trivially_copyable<Vec3f>::value);
 static_assert(std::is_trivially_copyable<Vec4f>::value);
+
+static_assert(std::is_trivially_copyable<Vec2i>::value);
