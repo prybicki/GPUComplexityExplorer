@@ -60,7 +60,7 @@ struct fmt::formatter<NCube<dim, T>>
 };
 
 using NCube2f = NCube<2, float>;
-using NCube2i = NCube<2, int>;
+using NCube2c = NCube<2, count_t>;
 
 static_assert(std::is_trivially_copyable<NCube2f>::value);
-static_assert(std::is_trivially_copyable<NCube2i>::value);
+static_assert(std::is_trivially_copyable<NCube2c>::value);

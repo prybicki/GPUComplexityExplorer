@@ -83,3 +83,5 @@ add_subdirectory(apps)
 
 enable_testing()
 add_subdirectory(tests)
+
+add_executable(exp apps/exp.cu)

@@ -6,6 +6,7 @@
 #include <vector_types.h>
 
 #include <data/Type.hpp>
+#include <compute/Accessors.hpp>
 
 struct ThreadsLayout
 {
@@ -26,8 +27,14 @@ private:
 struct DeviceMemory
 {
 	~DeviceMemory();
+	template<typename R>
+	LinMemAcc2D<R> accessor2D(Vec2c dims) {
+		// TODO type and bound checking
+		return {reinterpret_cast<R*>(ptr), dims};
+	}
 private:
 	DeviceMemory(void* ptr, count_t elemCount, Type valueType) : ptr(ptr), elemCount(elemCount), valueType(valueType) {}
+
 
 private:
 	void* ptr;

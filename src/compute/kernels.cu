@@ -201,7 +201,7 @@ __global__ void kTmpColorizeCustomF32(count_t count, const float* in, const floa
 	out[tid].a = 255;
 }
 
-__global__ void kTmpSetNCube(count_t width, count_t height, float* data, NCube2i rect, float value)
+__global__ void kTmpSetNCube(count_t width, count_t height, float* data, NCube2c rect, float value)
 {
 	int tX = threadIdx.x + blockIdx.x * blockDim.x;
 	int tY = threadIdx.y + blockIdx.y * blockDim.y;
@@ -214,23 +214,41 @@ __global__ void kTmpSetNCube(count_t width, count_t height, float* data, NCube2i
 	data[tX + tY * width] = value;
 }
 
-__global__ void kHeatTransfer(count_t width, count_t height, const float* curr, float* next, float coeff)
-{
-	int tX = threadIdx.x + blockIdx.x * blockDim.x;
-	int tY = threadIdx.y + blockIdx.y * blockDim.y;
-	bool inRange = (tX < width) && (tY < height);
-	if (!inRange) {
-		return;
-	}
-	bool isBorder = (tX == 0) || (tY == 0) || (tX == width - 1) || (tY == height - 1);
-	if (isBorder) {
-		next[tX + tY * width] = 0.0f;
-		return;
-	}
+#include <data/Indexable.hpp>
 
-	next[tX + tY * width] = curr[tX + tY * width];
-	next[tX + tY * width] += coeff * (curr[(tX+1) + (tY) * width] - curr[tX + tY * width]);
-	next[tX + tY * width] += coeff * (curr[(tX-1) + (tY) * width] - curr[tX + tY * width]);
-	next[tX + tY * width] += coeff * (curr[(tX) + (tY+1) * width] - curr[tX + tY * width]);
-	next[tX + tY * width] += coeff * (curr[(tX) + (tY-1) * width] - curr[tX + tY * width]);
-}
+// template<Indexable2D Map2D>
+// struct HeatTransfer
+// {
+// 	struct Args
+// 	{
+// 		count_t width;
+// 		count_t height;
+// 		Map2D curr;
+// 		Map2D next;
+// 		float coeff;
+// 	};
+// 	HeatTransfer(Args){}
+// 	void* getPtr() { return reinterpret_cast<void *>(kHeatTransfer);}
+// };
+//
+//
+// __global__ void kHeatTransfer(HeatTransfer::Args arg)
+// {
+// 	int tX = threadIdx.x + blockIdx.x * blockDim.x;
+// 	int tY = threadIdx.y + blockIdx.y * blockDim.y;
+// 	bool inRange = (tX < width) && (tY < height);
+// 	if (!inRange) {
+// 		return;
+// 	}
+// 	bool isBorder = (tX == 0) || (tY == 0) || (tX == width - 1) || (tY == height - 1);
+// 	if (isBorder) {
+// 		next[tX + tY * width] = 0.0f;
+// 		return;
+// 	}
+//
+// 	next[tX + tY * width] = curr[tX + tY * width];
+// 	next[tX + tY * width] += coeff * (curr[(tX+1) + (tY) * width] - curr[tX + tY * width]);
+// 	next[tX + tY * width] += coeff * (curr[(tX-1) + (tY) * width] - curr[tX + tY * width]);
+// 	next[tX + tY * width] += coeff * (curr[(tX) + (tY+1) * width] - curr[tX + tY * width]);
+// 	next[tX + tY * width] += coeff * (curr[(tX) + (tY-1) * width] - curr[tX + tY * width]);
+// }

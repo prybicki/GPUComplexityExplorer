@@ -3,8 +3,8 @@
 #include <type_traits>
 #include <numeric>
 #include <iterator>
-
-#include <fmt/format.h>
+#include <array>
+#include <cmath>
 
 #include <types/count_t.hpp>
 #include <macros/cuda.hpp>
@@ -14,7 +14,7 @@ template<count_t dim, typename T>
 struct Vector
 {
 	using V = Vector<dim, T>;
-	static_assert(dim >= 2);
+	// static_assert(dim >= 2); // TODO: Is dim == 1 OK?
 	// *** *** *** CONSTRUCTORS *** *** *** //
 
 	// Zero constructor
@@ -121,7 +121,7 @@ private:
 	T row[dim];
 };
 
-// #ifndef __CUDACC__
+#include <fmt/format.h>
 template<int dim, typename T>
 struct fmt::formatter<Vector<dim, T>>
 {
@@ -143,20 +143,25 @@ struct fmt::formatter<Vector<dim, T>>
 		return fmt::format_to(ctx.out(), ")");
 	}
 };
-// #endif // __CUDACC__
 
 using Vec2f = Vector<2, float>;
 using Vec3f = Vector<3, float>;
 using Vec4f = Vector<4, float>;
 
-using Vec2i = Vector<2, int>;
-using Vec3i = Vector<3, int>;
-using Vec4i = Vector<4, int>;
+// using Vec1i = Vector<1, int>;
+// using Vec2i = Vector<2, int>;
+// using Vec3i = Vector<3, int>;
+// using Vec4i = Vector<4, int>;
+
+using Vec1c = Vector<1, count_t>;
+using Vec2c = Vector<2, count_t>;
+using Vec3c = Vector<3, count_t>;
+using Vec4c = Vector<4, count_t>;
 
 static_assert(std::is_trivially_copyable<Vec2f>::value);
 static_assert(std::is_trivially_copyable<Vec3f>::value);
 static_assert(std::is_trivially_copyable<Vec4f>::value);
 
-static_assert(std::is_trivially_copyable<Vec2i>::value);
-static_assert(std::is_trivially_copyable<Vec3i>::value);
-static_assert(std::is_trivially_copyable<Vec4i>::value);
+// static_assert(std::is_trivially_copyable<Vec2i>::value);
+// static_assert(std::is_trivially_copyable<Vec3i>::value);
+// static_assert(std::is_trivially_copyable<Vec4i>::value);

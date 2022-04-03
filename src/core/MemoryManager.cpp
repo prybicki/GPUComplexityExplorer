@@ -6,7 +6,7 @@
 #include <cuda_runtime_api.h>
 #include <core/ResourcePrimitives.hpp>
 
-void MemoryManager::run(ThreadsLayout threads, void *kernel, void **args)
+void MemoryManager::runLL(ThreadsLayout threads, void *kernel, void **args)
 {
 	CHECK_CUDA(cudaLaunchKernel(kernel, threads.gridDim, threads.blockDim, args, 0, 0));
 	CHECK_CUDA(cudaStreamSynchronize(nullptr));

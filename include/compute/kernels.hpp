@@ -38,6 +38,51 @@ __global__ void kTmpColorizeCustomF32(count_t count, const float* in, const floa
 #include <math/NCube.hpp>
 
 // TODO: Can gridDim represent actual data size?
-__global__ void kTmpSetNCube(count_t width, count_t height, float* data, NCube2i rect, float value);
+// __global__ void kTmpSetNCube(count_t width, count_t height, float* data, NCube2c rect, float value);
 
 __global__ void kHeatTransfer(count_t width, count_t height, const float* curr, float* next, float coeff);
+
+#include <data/Indexable.hpp>
+
+template<Indexable2D<int> MapT>
+__global__ void kSetMap(MapT map)
+{
+	for (int y = 0; y < map.dims().y(); ++y) {
+		for (int x = 0; x < map.dims().x(); ++x) {
+			map[y][x] = y * x;
+		}
+	}
+}
+
+template<Indexable2D<float> MapT>
+struct DoPrintArgs
+{
+	MapT map;
+};
+
+
+
+template<typename T>
+struct DoPrint
+{
+	static __global__ void kPrintMap(DoPrintArgs<T> args)
+	{
+		auto&& map = args.map;
+		for (int y = 0; y < map.dims().y(); ++y) {
+			for (int x = 0; x < map.dims().x(); ++x) {
+				printf("%f ", map[y][x]);
+			}
+			printf("\n");
+		}
+	}
+
+	DoPrint(DoPrintArgs<T> args) : ptr(reinterpret_cast<void*>(DoPrint<T>::kPrintMap)), args(args) {}
+
+	void* ptr;
+	DoPrintArgs<T> args;
+};
+
+
+
+
+

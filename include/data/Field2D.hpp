@@ -1,10 +1,11 @@
 #pragma once
 
 #include <data/PropertySet.hpp>
+#include <data/Indexable.hpp>
 
 struct Field2D
 {
-	Field2D(NCube2f area, Vec2i resolution, PropertySet properties) : _area(area), _resolution(resolution), _property(*properties.begin())
+	Field2D(NCube2f area, Vec2c resolution, PropertySet properties) : _area(area), _resolution(resolution), _property(*properties.begin())
 	{
 		if (properties.getElementCount() != 1) {
 			TODO("implement multi-layer field 2D");
@@ -14,15 +15,22 @@ struct Field2D
 		_previous = mm.memoryAllocate(type, resolution.product());
 	}
 
-	NCube2f getArea() { return _area; }
-	NCube2i getCells(NCube2f area) {
+	template<typename R, Indexable2D<R> Map2D>
+	Map2D property(const std::string_view name)
+	{
+		return _current->accessor2D<R>(_resolution);
+	}
+
+	Vec2c dims() { return _resolution; }
+	NCube2f area() { return _area; }
+	NCube2c cellsIn(NCube2f area) {
 		// TODO here
 		// NCube functions
 	}
 
 private:
 	NCube2f _area;
-	Vec2i _resolution;
+	Vec2c _resolution;
 	Property _property;
 	dev_mem_t _current;
 	dev_mem_t _previous;

@@ -10,7 +10,7 @@ struct MemoryManager
 	static MemoryManager& instance();
 
 	template<typename Kernel, typename... KernelArgs>
-	void run(ThreadsLayout threads, Kernel kernel, KernelArgs... kernelArgs)	{ run(threads, reinterpret_cast<void*>(kernel), std::vector<void*>{&kernelArgs...}.data());	}
+	void run(ThreadsLayout threads, Kernel kernel, KernelArgs... kernelArgs)	{ runLL(threads, reinterpret_cast<void*>(kernel), std::vector<void*>{&kernelArgs...}.data());	}
 
 	template<typename T> // TODO: type-check! Currently passing double instead of float -> UB
 	dev_mem_t memoryAllocate(count_t elements) { return memoryAllocate(Type::create<T>(), elements); }
@@ -21,7 +21,7 @@ struct MemoryManager
 private:
 	MemoryManager() = default;
 
-	void run(ThreadsLayout threads, void* kernel, void** args);
+	void runLL(ThreadsLayout threads, void* kernel, void** args);
 
 };
 
