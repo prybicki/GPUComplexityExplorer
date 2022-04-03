@@ -1,4 +1,4 @@
-#include <Field2DShader.hpp>
+#include <graphics/Field2DShader.hpp>
 
 #include <Magnum/Math/Vector2.h>
 #include <Magnum/GL/Attribute.h>
@@ -14,7 +14,7 @@
 #include <Corrade/Containers/Reference.h>
 #include <Corrade/Utility/Resource.h>
 #include <fmt/format.h>
-#include <ShaderSources.hpp>
+#include <graphics/ShaderSources.hpp>
 
 using namespace Magnum;
 

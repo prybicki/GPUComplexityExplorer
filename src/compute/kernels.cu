@@ -1,4 +1,4 @@
-#include <cuda/kernels.hpp>
+#include <compute/kernels.hpp>
 
 #include <math/Vector.hpp>
 #include <math/Matrix.hpp>
@@ -206,8 +206,8 @@ __global__ void kTmpSetNCube(count_t width, count_t height, float* data, NCube2i
 	int tX = threadIdx.x + blockIdx.x * blockDim.x;
 	int tY = threadIdx.y + blockIdx.y * blockDim.y;
 	bool inRange = (tX < width) && (tY < height);
-	bool inNCube = (rect.min.x() <= tX) && (tX < rect.max.x())
-	            && (rect.min.y() <= tY) && (tY < rect.max.y());
+	bool inNCube = (rect.min().x() <= tX) && (tX < rect.max().x())
+	            && (rect.min().y() <= tY) && (tY < rect.max().y());
 	if (!inRange || !inNCube) {
 		return;
 	}

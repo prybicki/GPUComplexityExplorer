@@ -5,7 +5,7 @@ cmake_minimum_required(VERSION 3.17)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CUDA_STANDARD 20)
 set(CMAKE_CXX_COMPILER clang++-12)
-#set(CMAKE_CUDA_COMPILER clang-12)
+set(CMAKE_CUDA_COMPILER clang-12)
 project(THC LANGUAGES CXX CUDA)
 
 #set(CMAKE_CUDA_ARCHITECTURES 86-virtual)
@@ -38,16 +38,16 @@ include_directories(include)
 corrade_add_resource(ShaderResources shaders/shaders.conf)
 
 # RAII Wrapper for ShaderResources
-add_library(ShaderSources src/ShaderSources.cpp ${ShaderResources})
+add_library(ShaderSources src/graphics/ShaderSources.cpp ${ShaderResources})
 target_link_libraries(ShaderSources Corrade::Utility)
 
-add_library(GPUKernels src/cuda/kernels.cu)
+add_library(GPUKernels src/compute/kernels.cu)
 #set_property(TARGET GPUKernels PROPERTY CUDA_SEPARABLE_COMPILATION ON)
 
 add_library(THC
-	src/ResourceManager.cpp
-	src/Visualizer.cpp
-	src/Field2DShader.cpp
+		src/core/ResourceManager.cpp
+		src/graphics/Visualizer.cpp
+		src/graphics/Field2DShader.cpp
 )
 target_include_directories(THC PRIVATE ${CUDAToolkit_INCLUDE_DIRS})
 target_link_libraries(THC

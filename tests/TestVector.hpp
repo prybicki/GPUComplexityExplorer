@@ -52,7 +52,7 @@ struct TestVector : TestSuite::Tester
 			CORRADE_COMPARE(threes[i],     3);
 			CORRADE_COMPARE(negOnes[i],   -1);
 			CORRADE_COMPARE(sixes[i],      6);
-			CORRADE_COMPARE(negSixes[i], -6);
+			CORRADE_COMPARE(negSixes[i],  -6);
 		}
 	}
 };

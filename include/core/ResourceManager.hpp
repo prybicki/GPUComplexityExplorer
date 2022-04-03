@@ -2,7 +2,7 @@
 
 #include <fmt/format.h>
 
-#include <ResourcePrimitives.hpp>
+#include <core/ResourcePrimitives.hpp>
 #include <vector>
 
 struct ResourceManager

@@ -3,10 +3,10 @@
 #include <fmt/format.h>
 
 #include <math/Vector.hpp>
-#include <Visualizer.hpp>
-#include <cuda/kernels.hpp>
-#include <macros.hpp>
-#include <ResourceManager.hpp>
+#include <graphics/Visualizer.hpp>
+#include <compute/kernels.hpp>
+#include <macros/todo.hpp>
+#include <core/ResourceManager.hpp>
 
 std::default_random_engine engine;
 
@@ -60,8 +60,8 @@ int main(int argc, char** argv)
 {
 	constexpr count_t count = 16384 * 1;
 	Visualizer vis(argc, argv);
-	vis.setCameraCenter(1.0, 1.0);
-	vis.setCameraMinRange(3.0);
+	vis.cameraSetCenter(1.0, 1.0);
+	vis.cameraSetMinRange(3.0);
 
 	std::vector<Vec4f> colors = {
 		{1.0f, 0.0f, 0.0f, 0.8f},

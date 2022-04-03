@@ -3,7 +3,7 @@
 #include <cuda_runtime.h>
 #include <math/Vector.hpp>
 #include <math/Matrix.hpp>
-#include <color_t.hpp>
+#include <types/color_t.hpp>
 
 using count_t = int;
 

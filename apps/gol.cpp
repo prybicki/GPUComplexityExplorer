@@ -1,14 +1,10 @@
-#include <Visualizer.hpp>
+#include <graphics/Visualizer.hpp>
 #include <curand.h>
 #include <unistd.h>
-#include <ResourceManager.hpp>
+#include <core/ResourceManager.hpp>
 
-#include <cuda/kernels.hpp>
-#include <macros.hpp>
+#include <compute/kernels.hpp>
 
-#define CUDA_CALL(x) do { if((x)!=cudaSuccess) { \
-printf("Error at %s:%d\n",__FILE__,__LINE__);\
-return EXIT_FAILURE;}} while(0)
 #define CURAND_CALL(x) do { if((x)!=CURAND_STATUS_SUCCESS) { \
 printf("Error at %s:%d\n",__FILE__,__LINE__);\
 return EXIT_FAILURE;}} while(0)
@@ -17,8 +13,8 @@ return EXIT_FAILURE;}} while(0)
 int main(int argc, char** argv)
 {
 	Visualizer v(argc, argv);
-	v.setCameraCenter(1.5*4096, 4096);
-	v.setCameraMinRange(2*4096);
+	v.cameraSetCenter(1.5 * 4096, 4096);
+	v.cameraSetMinRange(2 * 4096);
 	const int sizeX = 4092;
 	const int sizeY = 4092;
 

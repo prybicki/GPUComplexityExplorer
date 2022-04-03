@@ -1,9 +1,10 @@
-#include <ResourceManager.hpp>
+#include <core/ResourceManager.hpp>
 
-#include <macros.hpp>
+#include <macros/todo.hpp>
+#include <macros/cuda.hpp>
 
 #include <cuda_runtime_api.h>
-#include <ResourcePrimitives.hpp>
+#include <core/ResourcePrimitives.hpp>
 
 ResourceManager& rm = ResourceManager::instance();
 
