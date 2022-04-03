@@ -6,7 +6,7 @@
 #include <graphics/Visualizer.hpp>
 #include <compute/kernels.hpp>
 #include <macros/todo.hpp>
-#include <core/ResourceManager.hpp>
+#include <core/MemoryManager.hpp>
 
 std::default_random_engine engine;
 

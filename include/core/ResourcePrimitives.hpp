@@ -20,11 +20,12 @@ private:
 	ThreadsLayout(dim3 gridDim, dim3 blockDim) : gridDim(gridDim), blockDim(blockDim) {}
 	dim3 gridDim;
 	dim3 blockDim;
-	friend struct ResourceManager;
+	friend struct MemoryManager;
 };
 
 struct DeviceMemory
 {
+	~DeviceMemory();
 private:
 	DeviceMemory(void* ptr, count_t elemCount, Type valueType) : ptr(ptr), elemCount(elemCount), valueType(valueType) {}
 
@@ -33,7 +34,7 @@ private:
 	count_t elemCount;
 	Type valueType;
 
-	friend struct ResourceManager;
+	friend struct MemoryManager;
 };
 
-using memory_t = std::shared_ptr<DeviceMemory>;
+using dev_mem_t = std::shared_ptr<DeviceMemory>;

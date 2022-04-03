@@ -5,7 +5,7 @@ cmake_minimum_required(VERSION 3.17)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CUDA_STANDARD 20)
 set(CMAKE_CXX_COMPILER clang++-12)
-set(CMAKE_CUDA_COMPILER clang-12)
+#set(CMAKE_CUDA_COMPILER clang-12)
 project(THC LANGUAGES CXX CUDA)
 
 #set(CMAKE_CUDA_ARCHITECTURES 86-virtual)
@@ -45,7 +45,7 @@ add_library(GPUKernels src/compute/kernels.cu)
 #set_property(TARGET GPUKernels PROPERTY CUDA_SEPARABLE_COMPILATION ON)
 
 add_library(THC
-		src/core/ResourceManager.cpp
+		src/core/MemoryManager.cpp
 		src/graphics/Visualizer.cpp
 		src/graphics/Field2DShader.cpp
 )

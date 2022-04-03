@@ -1,7 +1,7 @@
 #include <graphics/Visualizer.hpp>
 #include <curand.h>
 #include <unistd.h>
-#include <core/ResourceManager.hpp>
+#include <core/MemoryManager.hpp>
 
 #include <compute/kernels.hpp>
 

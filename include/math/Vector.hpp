@@ -2,12 +2,13 @@
 
 #include <type_traits>
 #include <numeric>
-#include <array>
+#include <iterator>
 
 #include <fmt/format.h>
 
 #include <types/count_t.hpp>
 #include <macros/cuda.hpp>
+#include <macros/iteration.hpp>
 
 template<count_t dim, typename T>
 struct Vector
@@ -25,6 +26,9 @@ struct Vector
 			v = scalar;
 		}
 	}
+
+	Vector(const std::array<T, dim>& values)
+	{ std::copy(values.begin(), values.end(), row); }
 
 	// List constructor
 	template<typename... Args>
@@ -54,13 +58,8 @@ struct Vector
 
 	// *** *** *** ACCESSORS *** *** *** //
 
-	HD T* begin() { return row; }
-	HD T* end() { return row + dim; }
-	HD T& operator[](count_t i) { return row[i]; }
-
-	HD const T* begin() const { return row; }
-	HD const T* end() const { return row + dim; }
-	HD const T& operator[](count_t i) const { return row[i]; }
+	FORWARD_ITERATION(row, HD)
+	FORWARD_INDEX_OPERATOR(row, HD)
 
 #define NAMED_GETTER(name, index) \
 	HD T name() { static_assert(dim > index); return row[index]; } \
@@ -110,6 +109,14 @@ struct Vector
 		return value;
 	}
 
+	HD T product() const {
+		T value = static_cast<T>(1);
+		for (auto&& v : *this) {
+			value *= v;
+		}
+		return value;
+	}
+
 private:
 	T row[dim];
 };
@@ -138,17 +145,18 @@ struct fmt::formatter<Vector<dim, T>>
 };
 // #endif // __CUDACC__
 
-
-template<typename T>
-using Vec2 = Vector<2, T>;
 using Vec2f = Vector<2, float>;
 using Vec3f = Vector<3, float>;
 using Vec4f = Vector<4, float>;
 
 using Vec2i = Vector<2, int>;
+using Vec3i = Vector<3, int>;
+using Vec4i = Vector<4, int>;
 
 static_assert(std::is_trivially_copyable<Vec2f>::value);
 static_assert(std::is_trivially_copyable<Vec3f>::value);
 static_assert(std::is_trivially_copyable<Vec4f>::value);
 
 static_assert(std::is_trivially_copyable<Vec2i>::value);
+static_assert(std::is_trivially_copyable<Vec3i>::value);
+static_assert(std::is_trivially_copyable<Vec4i>::value);

@@ -3,6 +3,7 @@
 #include <math/Vector.hpp>
 #include <macros/todo.hpp>
 #include <macros/cuda.hpp>
+#include <macros/cpp20.hpp>
 
 template<count_t dim, typename T>
 struct NCube
@@ -20,19 +21,21 @@ struct NCube
 	HD VecT max() const { return _max; }
 	HD VecT span() const {return (max() - min()); }
 
-	HD VecT center() const requires std::is_floating_point_v<T>
+	HD VecT center() const CPP20(requires std::is_floating_point_v<T>)
 	{ return min() + (max() - min()).half(); }
 
-	HD NCubeT scaled(VecT scale) const requires std::is_floating_point_v<T>
+	HD NCubeT scaled(VecT scale) const CPP20(requires std::is_floating_point_v<T>)
 	{ return centeredAt(center(), scale * span()); }
 
-	HD NCubeT shrinkedBy(VecT amount) const requires std::is_floating_point_v<T>
+	HD NCubeT shrinkedBy(VecT amount) const CPP20(requires std::is_floating_point_v<T>)
 	{return centeredAt(center(), span() - amount); }
 
-	HD VecT positionOf(Vector<dim, float> positionFracts) const requires std::is_floating_point_v<T>
+	HD VecT positionOf(Vector<dim, float> positionFracts) const CPP20(requires std::is_floating_point_v<T>)
 	{ return min() + positionFracts * (max() - min()); }
 
-	HD NCubeT placedIn(NCubeT enclosing, Vector<dim, float> positionFracts) const requires std::is_floating_point_v<T>
+	HD NCubeT nCubeOf(NCube<dim, float> ncubeFracts);
+
+	HD NCubeT placedIn(NCubeT enclosing, Vector<dim, float> positionFracts) const CPP20(requires std::is_floating_point_v<T>)
 	{ return NCubeT::centeredAt(enclosing.shrinkedBy(span()).positionOf(positionFracts), span()); }
 
 

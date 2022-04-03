@@ -22,7 +22,7 @@
 #include <macros/todo.hpp>
 #include <compute/kernels.hpp>
 
-#include <core/ResourceManager.hpp>
+#include <core/MemoryManager.hpp>
 
 using namespace Magnum;
 
@@ -120,7 +120,7 @@ void Visualizer::renderParticles(count_t count, Vec2f *dPosition, float *dRadius
 	assert(dTransformSize == sizeof(Mat3x3f) * count);
 
 	CHECK_CUDA(cudaMemcpy(colorBufferPtr, dColor, sizeof(Vec4f) * count, cudaMemcpyDeviceToDevice));
-	rm.run({count}, kPos2DToTransform3x3, count, dPosition, dRadius, transformBufferPtr);
+	mm.run({count}, kPos2DToTransform3x3, count, dPosition, dRadius, transformBufferPtr);
 
 	CHECK_CUDA(cudaGraphicsUnmapResources(1, &transformResource));
 	CHECK_CUDA(cudaGraphicsUnmapResources(1, &colorResource));
