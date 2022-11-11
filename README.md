@@ -1,4 +1,9 @@
-# TinyHadronCollider
+# GPUComplexityExplorer
+
+GPUComplexityExplorer is toolkit (library) for an amateur computational experimentation done purely on GPU using CUDA and OpenGL interop (via [Magnum Engine](https://magnum.graphics/)).
+
+A short roadmap:
+- Evolution of Cellular Automata
 
 ## Building
 
