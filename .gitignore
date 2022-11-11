@@ -1,4 +1,5 @@
 external/
+debug*
 cmake/magnum-bootstrap
 
 # Prerequisites

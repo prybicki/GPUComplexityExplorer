@@ -1,4 +1,4 @@
-#include <Visualizer.hpp>
+#include <graphics/Visualizer.hpp>
 
 #include <MagnumPlugins/AnyImageImporter/AnyImageImporter.h>
 
@@ -19,10 +19,10 @@
 
 #include <implot.h>
 
-#include <macros.hpp>
-#include <cuda/kernels.hpp>
+#include <macros/todo.hpp>
+#include <compute/kernels.hpp>
 
-#include <ResourceManager.hpp>
+#include <core/MemoryManager.hpp>
 
 using namespace Magnum;
 
@@ -44,8 +44,8 @@ Visualizer::Visualizer(const Arguments &args, const Utility::Arguments &cliArgs)
 	// 		GL::Renderer::BlendFunction::SourceAlpha,
 	// 		GL::Renderer::BlendFunction::DestinationAlpha);
 
-	setCameraCenter(INITAL_CAMERA_POSITION.x(), INITAL_CAMERA_POSITION.y());
-	setCameraMinRange(INITIAL_RENDER_DISTANCE);
+	cameraSetCenter({INITAL_CAMERA_POSITION.x(), INITAL_CAMERA_POSITION.y()});
+	cameraSetMinRange(INITIAL_RENDER_DISTANCE);
 
 	_imgui = ImGuiIntegration::Context(Vector2{windowSize()} / dpiScaling(), windowSize(), framebufferSize());
 	implotCtx = ImPlot::CreateContext();
@@ -63,12 +63,12 @@ void Visualizer::setUserGUI(std::function<void()> userGUI)
 	this->userGUI = userGUI;
 }
 
-void Visualizer::setCameraCenter(float posX, float posY)
+void Visualizer::cameraSetCenter(Vec2f center)
 {
-	cameraObject.translate({posX, posY});
+	cameraObject.translate({center.x(), center.y()});
 }
 
-void Visualizer::setCameraMinRange(float range)
+void Visualizer::cameraSetMinRange(float range)
 {
 	currentZoom = range / std::min(windowSize().x(), windowSize().y());
 }
@@ -120,7 +120,7 @@ void Visualizer::renderParticles(count_t count, Vec2f *dPosition, float *dRadius
 	assert(dTransformSize == sizeof(Mat3x3f) * count);
 
 	CHECK_CUDA(cudaMemcpy(colorBufferPtr, dColor, sizeof(Vec4f) * count, cudaMemcpyDeviceToDevice));
-	rm.run({count}, kPos2DToTransform3x3, count, dPosition, dRadius, transformBufferPtr);
+	mm.run({count}, kPos2DToTransform3x3, count, dPosition, dRadius, transformBufferPtr);
 
 	CHECK_CUDA(cudaGraphicsUnmapResources(1, &transformResource));
 	CHECK_CUDA(cudaGraphicsUnmapResources(1, &colorResource));

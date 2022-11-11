@@ -1,4 +1,4 @@
-#include <ShaderSources.hpp>
+#include <graphics/ShaderSources.hpp>
 
 const ShaderSources& ShaderSources::instance()
 {

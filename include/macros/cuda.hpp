@@ -1,5 +1,7 @@
 #pragma once
 
+#ifndef COMPUTE_INCLUDE
+#include <fmt/format.h>
 #define CHECK_CUDA(call)                                                                            \
 do                                                                                                  \
 {                                                                                                   \
@@ -21,3 +23,10 @@ do                                                                              
 	}                                                                                       \
 }                                                                                           \
 while(false)
+#endif // COMPUTE_INCLUDE
+
+#ifdef __CUDACC__
+	#define HD __host__ __device__
+#else
+	#define HD
+#endif

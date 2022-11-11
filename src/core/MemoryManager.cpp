@@ -1,21 +1,20 @@
-#include <ResourceManager.hpp>
+#include <core/MemoryManager.hpp>
 
-#include <macros.hpp>
+#include <macros/todo.hpp>
+#include <macros/cuda.hpp>
 
 #include <cuda_runtime_api.h>
-#include <ResourcePrimitives.hpp>
+#include <core/ResourcePrimitives.hpp>
 
-ResourceManager& rm = ResourceManager::instance();
-
-void ResourceManager::run(ThreadsLayout threads, void *kernel, void **args)
+void MemoryManager::runLL(ThreadsLayout threads, void *kernel, void **args)
 {
 	CHECK_CUDA(cudaLaunchKernel(kernel, threads.gridDim, threads.blockDim, args, 0, 0));
 	CHECK_CUDA(cudaStreamSynchronize(nullptr));
 }
 
-ResourceManager &ResourceManager::instance()
+MemoryManager &MemoryManager::instance()
 {
-	static ResourceManager instance;
+	static MemoryManager instance;
 	return instance;
 }
 
@@ -31,9 +30,19 @@ ThreadsLayout::ThreadsLayout(std::array<count_t, 2> launchDims, std::array<count
 
 }
 
-memory_t ResourceManager::memoryAllocate(TypeInfo valueType, count_t elements)
+dev_mem_t MemoryManager::memoryAllocate(Type valueType, count_t elements)
 {
 	void* ptr = nullptr;
-	CHECK_CUDA(cudaMalloc(&ptr, valueType.getElementSize() * elements));
+	CHECK_CUDA(cudaMalloc(&ptr, valueType.sizeOf() * elements));
 	return std::shared_ptr<DeviceMemory>(new DeviceMemory(ptr, elements, valueType));
+}
+
+void MemoryManager::memoryFree(const DeviceMemory &memory)
+{
+	CHECK_CUDA(cudaFree(memory.ptr));
+}
+
+DeviceMemory::~DeviceMemory()
+{
+	mm.memoryFree(*this);
 }

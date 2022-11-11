@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Vector.hpp>
+#include <math/Vector.hpp>
 #include <array>
 
 // #ifndef __CUDACC__

@@ -38,16 +38,16 @@ include_directories(include)
 corrade_add_resource(ShaderResources shaders/shaders.conf)
 
 # RAII Wrapper for ShaderResources
-add_library(ShaderSources src/ShaderSources.cpp ${ShaderResources})
+add_library(ShaderSources src/graphics/ShaderSources.cpp ${ShaderResources})
 target_link_libraries(ShaderSources Corrade::Utility)
 
-add_library(GPUKernels src/cuda/kernels.cu)
+add_library(GPUKernels src/compute/kernels.cu)
 #set_property(TARGET GPUKernels PROPERTY CUDA_SEPARABLE_COMPILATION ON)
 
 add_library(THC
-	src/ResourceManager.cpp
-	src/Visualizer.cpp
-	src/Field2DShader.cpp
+		src/core/MemoryManager.cpp
+		src/graphics/Visualizer.cpp
+		src/graphics/Field2DShader.cpp
 )
 target_include_directories(THC PRIVATE ${CUDAToolkit_INCLUDE_DIRS})
 target_link_libraries(THC
@@ -80,3 +80,8 @@ if (${CMAKE_CUDA_COMPILER_ID} STREQUAL "Clang")
 endif()
 
 add_subdirectory(apps)
+
+enable_testing()
+add_subdirectory(tests)
+
+add_executable(exp apps/exp.cu)

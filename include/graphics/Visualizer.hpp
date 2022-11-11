@@ -17,11 +17,12 @@
 
 #include <implot.h>
 
-#include <Vector.hpp>
-#include <Field2DShader.hpp>
+#include <math/Vector.hpp>
+#include <graphics/Field2DShader.hpp>
 
 #include <cuda_runtime_api.h>
-#include "color_t.hpp"
+#include <math/NCube.hpp>
+#include "types/color_t.hpp"
 
 struct Visualizer : public Magnum::Platform::Application
 {
@@ -38,8 +39,17 @@ public:
 	void setUserGUI(std::function<void()> userGUI);
 	void renderParticles(count_t count, Vec2f* dPosition, float* dRadius, Vec4f* dColor);
 	void renderTexture(float posX, float posY, int sizeX, int sizeY, color_t* devColors);
-	void setCameraCenter(float posX, float posY);
-	void setCameraMinRange(float range);
+	void cameraSetCenter(Vec2f center);
+	void cameraSetMinRange(float range);
+
+	void cameraLookAtWithPadding(NCube2f area, float paddingFraction=0.08f)
+	{
+		cameraSetCenter(area.center());
+		cameraSetMinRange(((1.0f + paddingFraction) * area.span()).min());
+	}
+
+	void cameraLookAt(NCube2f area)
+	{ cameraLookAtWithPadding(area, 0); }
 
 private:
 	Visualizer(const Arguments& args, const Corrade::Utility::Arguments& cliArgs);
