@@ -14,8 +14,7 @@ repositories:
         version: base-glfw
     external/magnum-integration:
         type: git
-        url: https://github.com/pezcode/magnum-integration.git
-        version: imgui-keymap
+        url: https://github.com/mosra/magnum-integration.git
     external/imgui:
         type: git
         url: https://github.com/ocornut/imgui.git
